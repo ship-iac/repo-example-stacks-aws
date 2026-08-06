@@ -43,7 +43,7 @@ jobs:
     needs: detect
     if: ${{ needs.detect.outputs.empty == 'false' && github.ref == format('refs/heads/{0}', needs.detect.outputs.default_branch) }}
     runs-on: ubuntu-slim
-    permissions: { contents: read }
+    permissions: { contents: read, id-token: write }
     strategy:
       fail-fast: false
       matrix: ${{ fromJSON(needs.detect.outputs.matrix) }}
@@ -59,12 +59,15 @@ jobs:
         with:
           terramate-version: ${{ vars.TERRAMATE_VERSION }}
           tofu-version: ${{ vars.TOFU_VERSION }}
+      - uses: aws-actions/configure-aws-credentials@e6de054238d6b7531b4efff3b6587d9aade6a06c # v6.2.3
+        with:
+          role-to-assume: ${{ vars.AWS_ROLE_ARN }}
+          aws-region: ${{ vars.AWS_REGION }}
       - uses: ship-iac/shipmate/actions/drift-cell@4fbb5725e3249fa9be013a842342687b007cfddf # v0.6.0
         with:
           stack: ${{ matrix.stack }}
           stack-name: ${{ matrix.stack }}
           env: ${{ matrix.environment }}
-          state-path: ${{ matrix.stack }}/.state
 
   # Completes the credentialed work drift-cell no longer does: authors/closes
   # the drift Issues, from downloaded drift-summary cell artifacts, and holds

@@ -13,25 +13,26 @@ permissions:
   contents: read
   actions: read
   pull-requests: read
+  id-token: write
 jobs:
   targeted:
     if: ${{ inputs.environment != '' }}
     uses: ship-iac/shipmate/.github/workflows/apply.yml@4fbb5725e3249fa9be013a842342687b007cfddf # v0.6.0
-    permissions: { contents: read, checks: read, actions: read }
+    permissions: { contents: read, checks: read, actions: read, id-token: write }
     secrets: inherit
     with:
       environment: ${{ inputs.environment }}
       ref: ${{ inputs.ref }}
       pr_number: ${{ inputs.pr_number }}
       plan_run_id: ${{ inputs.plan_run_id }}
-      state_suffix: .state
+      state_suffix: ""
   all:
     if: ${{ inputs.environment == '' }}
     uses: ship-iac/shipmate/.github/workflows/apply-all.yml@4fbb5725e3249fa9be013a842342687b007cfddf # v0.6.0
-    permissions: { contents: read, checks: read, actions: read }
+    permissions: { contents: read, checks: read, actions: read, id-token: write }
     secrets: inherit
     with:
       ref: ${{ inputs.ref }}
       pr_number: ${{ inputs.pr_number }}
       plan_run_id: ${{ inputs.plan_run_id }}
-      state_suffix: .state
+      state_suffix: ""

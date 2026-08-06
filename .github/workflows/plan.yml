@@ -39,6 +39,7 @@ jobs:
     runs-on: ubuntu-slim
     permissions:
       contents: read
+      id-token: write
     strategy:
       fail-fast: false
       matrix: ${{ fromJSON(needs.detect.outputs.matrix) }}
@@ -54,15 +55,10 @@ jobs:
         with:
           terramate-version: ${{ vars.TERRAMATE_VERSION }}
           tofu-version: ${{ vars.TOFU_VERSION }}
-      - name: stack slug
-        id: slug
-        run: echo "slug=$(echo '${{ matrix.stack }}' | tr / -)" >> "$GITHUB_OUTPUT"
-      - uses: ship-iac/shipmate/actions/state@4fbb5725e3249fa9be013a842342687b007cfddf # v0.6.0
+      - uses: aws-actions/configure-aws-credentials@e6de054238d6b7531b4efff3b6587d9aade6a06c # v6.2.3
         with:
-          stack-slug: ${{ steps.slug.outputs.slug }}
-          env: ${{ matrix.environment }}
-          mode: restore
-          path: ${{ matrix.stack }}/.state
+          role-to-assume: ${{ vars.AWS_ROLE_ARN }}
+          aws-region: ${{ vars.AWS_REGION }}
       - uses: ship-iac/shipmate/actions/plan-cell@4fbb5725e3249fa9be013a842342687b007cfddf # v0.6.0
         with:
           stack: ${{ matrix.stack }}
