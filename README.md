@@ -1,4 +1,4 @@
-# repo-example-stacks
+# repo-example-stacks-aws
 
 A minimal [Terramate](https://terramate.io/) + [OpenTofu](https://opentofu.org/)
 monorepo that exercises the **shipmate** GitHub Actions against a realistic
@@ -8,7 +8,8 @@ failure modes — **without touching any real cloud**.
 
 - Every stack manages only `random_pet` / `terraform_data` null resources.
 - State is **local** (`.state/<env>/<region>/terraform.tfstate` per stack).
-- **Zero cloud credentials** are required or used, anywhere.
+- **Zero cloud credentials** are required to run any of it by hand; the
+  workflows assume a role via OIDC, which the local-backend stacks never use.
 
 This is the **DRY / dynamic-backend** layout: one stack directory is applied
 N times, once per environment, distinguished only by the `TF_VAR_env` /
@@ -37,11 +38,11 @@ The stacks, tags, and DAG below are the fixture those workflows run against.
 ## Quickstart
 
 ```bash
-git clone <this-repo-url> repo-example-stacks
-cd repo-example-stacks
+git clone <this-repo-url> repo-example-stacks-aws
+cd repo-example-stacks-aws
 
 # Regenerate per-stack backend/provider/variables/main files from
-# stacks/root.tm.hcl. Committed generated files are up to date, so this
+# root.tm.hcl. Committed generated files are up to date, so this
 # prints "Nothing to do, generated code is up to date".
 terramate generate
 
@@ -52,7 +53,7 @@ terramate list --tags env/dev-eu
 terramate experimental run-graph
 
 # Drive one stack: dns is dev-us / us-east-1.
-cd stacks/dns
+cd dns
 export TF_VAR_env=dev-us
 export TF_VAR_region=us-east-1
 tofu init -input=false
@@ -68,28 +69,30 @@ Expect `tofu plan` to show 2 resources to add (`random_pet.this`,
 ## Repository layout
 
 ```
-repo-example-stacks/
-├── terramate.tm.hcl          # enables the "scripts" experiment
+repo-example-stacks-aws/
+├── terramate.tm.hcl      # enables the "scripts" experiment
+├── env-order.tm.hcl      # cross-environment apply order
 ├── tools/
-│   └── mutate-state.ps1      # drift fixture helper
-└── stacks/
-    ├── root.tm.hcl           # shared globals + generate_hcl blocks + scripts,
-    │                         # inherited by every stack below it
-    ├── dns/                  # env/dev-us
-    ├── platform/             # env/dev-eu, after dns
-    ├── auth/                 # env/dev-eu, after platform
-    ├── workers/              # env/dev-eu, after platform
-    ├── app/                  # env/dev-eu + env/dev-us, after auth & workers
-    ├── tenant-a/             # env/dev-eu + env/dev-us, after app
-    ├── tenant-b/             # env/dev-eu + env/dev-us, after app
-    └── sandbox/box/          # env/sbx, standalone (no dependents/dependencies)
+│   └── mutate-state.ps1  # drift fixture helper
+├── root.tm.hcl           # shared globals + generate_hcl blocks + scripts,
+│                         # inherited by every stack beside it
+├── dns/                  # env/dev-us
+├── platform/             # env/dev-eu, after dns
+├── auth/                 # env/dev-eu, after platform
+├── workers/              # env/dev-eu, after platform
+├── app/                  # env/dev-eu + env/dev-us, after auth & workers
+├── tenant-a/             # env/dev-eu + env/dev-us, after app
+├── tenant-b/             # env/dev-eu + env/dev-us, after app
+└── sandbox/box/          # env/sbx, standalone (no dependents/dependencies)
 ```
+
+Every stack sits at the repo root — there is no `stacks/` wrapper directory.
 
 Each stack directory holds a `stack.tm.hcl` (name, tags, `after` dependencies,
 stable UUID) plus four Terramate-generated files you should never hand-edit:
 `_backend.tf`, `_providers.tf`, `_variables.tf`, `_main.tf`. They all begin
 with `// TERRAMATE: GENERATED AUTOMATICALLY DO NOT EDIT` and come from the
-`generate_hcl` blocks in `stacks/root.tm.hcl`. To change a stack's contents,
+`generate_hcl` blocks in `root.tm.hcl`. To change a stack's contents,
 edit `root.tm.hcl` and rerun `terramate generate` — never edit the generated
 `.tf` files (Terramate will refuse to regenerate over manual edits).
 
@@ -142,7 +145,7 @@ no edges.
 ## Environment / region model
 
 Nothing in a stack's generated code hardcodes an environment or region.
-`stacks/root.tm.hcl` generates:
+`root.tm.hcl` generates:
 
 - `_variables.tf` declaring `var.env`, `var.region` (both required, no
   default), plus `var.app_version` and `var.fail_precondition`.
@@ -167,14 +170,14 @@ In CI the values come from each GitHub Environment (`TF_VAR_env`,
 `platform` (dev-eu / eu-west-1):
 
 ```bash
-cd stacks/platform
+cd platform
 export TF_VAR_env=dev-eu
 export TF_VAR_region=eu-west-1
 tofu init -input=false
 tofu plan -input=false
 ```
 
-Terramate also ships two convenience scripts (defined in `stacks/root.tm.hcl`,
+Terramate also ships two convenience scripts (defined in `root.tm.hcl`,
 needing the `scripts` experiment already enabled in `terramate.tm.hcl`), run
 from inside a stack directory with the vars still exported:
 
