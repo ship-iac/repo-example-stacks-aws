@@ -28,7 +28,10 @@ generate_hcl "_providers.tf" {
           version = "~> 3.0"
         }
         aws = {
-          source  = "hashicorp/aws"
+          source = "hashicorp/aws"
+          # Exact, not `~> 6.0`: .terraform.lock.hcl is gitignored, so every
+          # init re-resolves; a release inside a plan/apply window would make
+          # tofu refuse the saved plan.
           version = "= 6.58.0"
         }
       }
