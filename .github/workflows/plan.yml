@@ -20,7 +20,7 @@ jobs:
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with: { fetch-depth: 0 }
-      - uses: ship-iac/shipmate/actions/setup@6be3d341e5d291b437fc85561de435d5f3cc8930 # v0.7.0
+      - uses: ship-iac/shipmate/actions/setup@2fdf60fa23ea3a4be68a8075afef80fbbc45111f # v0.7.1
         with:
           terramate-version: ${{ vars.TERRAMATE_VERSION }}
           tofu-version: ${{ vars.TOFU_VERSION }}
@@ -29,7 +29,7 @@ jobs:
       - name: stale codegen check
         run: terramate generate --detailed-exit-code
       - id: matrix
-        uses: ship-iac/shipmate/actions/build-matrix@6be3d341e5d291b437fc85561de435d5f3cc8930 # v0.7.0
+        uses: ship-iac/shipmate/actions/build-matrix@2fdf60fa23ea3a4be68a8075afef80fbbc45111f # v0.7.1
         with:
           base-sha: ${{ github.event.pull_request.base.sha }}
 
@@ -51,7 +51,7 @@ jobs:
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with: { fetch-depth: 0 }
-      - uses: ship-iac/shipmate/actions/setup@6be3d341e5d291b437fc85561de435d5f3cc8930 # v0.7.0
+      - uses: ship-iac/shipmate/actions/setup@2fdf60fa23ea3a4be68a8075afef80fbbc45111f # v0.7.1
         with:
           terramate-version: ${{ vars.TERRAMATE_VERSION }}
           tofu-version: ${{ vars.TOFU_VERSION }}
@@ -59,7 +59,7 @@ jobs:
         with:
           role-to-assume: ${{ vars.AWS_ROLE_ARN }}
           aws-region: ${{ vars.AWS_REGION }}
-      - uses: ship-iac/shipmate/actions/plan-cell@6be3d341e5d291b437fc85561de435d5f3cc8930 # v0.7.0
+      - uses: ship-iac/shipmate/actions/plan-cell@2fdf60fa23ea3a4be68a8075afef80fbbc45111f # v0.7.1
         with:
           stack: ${{ matrix.stack }}
           stack-name: ${{ matrix.stack }}
