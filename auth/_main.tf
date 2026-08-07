@@ -17,6 +17,14 @@ resource "terraform_data" "this" {
     }
   }
 }
+resource "aws_ssm_parameter" "this" {
+  name  = "/shipmate/repo-example-stacks-aws/${var.env}/auth"
+  type  = "String"
+  value = random_pet.this.id
+}
 output "name" {
   value = random_pet.this.id
+}
+output "parameter_name" {
+  value = aws_ssm_parameter.this.name
 }
