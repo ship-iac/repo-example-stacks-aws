@@ -5,8 +5,15 @@ globals {
 generate_hcl "_backend.tf" {
   content {
     terraform {
-      backend "local" {
-        path = ".state/${var.env}/${var.region}/terraform.tfstate"
+      backend "s3" {
+        bucket       = "repo-examples-shipmate-state"
+        key          = "repo-example-stacks-aws/${var.env}/${var.region}${terramate.stack.path.absolute}/terraform.tfstate"
+        region       = "eu-north-1"
+        use_lockfile = true
+        encrypt      = true
+        assume_role = {
+          role_arn = "arn:aws:iam::981781037707:role/shipmate-state"
+        }
       }
     }
   }
@@ -19,6 +26,22 @@ generate_hcl "_providers.tf" {
         random = {
           source  = "hashicorp/random"
           version = "~> 3.0"
+        }
+        aws = {
+          source = "hashicorp/aws"
+          # Exact, not `~> 6.0`: .terraform.lock.hcl is gitignored, so every
+          # init re-resolves; a release inside a plan/apply window would make
+          # tofu refuse the saved plan.
+          version = "= 6.58.0"
+        }
+      }
+    }
+    provider "aws" {
+      region = var.region
+      default_tags {
+        tags = {
+          shipmate-env   = var.env
+          shipmate-stack = terramate.stack.path.absolute
         }
       }
     }
@@ -57,8 +80,16 @@ generate_hcl "_main.tf" {
         }
       }
     }
+    resource "aws_ssm_parameter" "this" {
+      name  = "/shipmate/repo-example-stacks-aws/${var.env}${terramate.stack.path.absolute}"
+      type  = "String"
+      value = random_pet.this.id
+    }
     output "name" {
       value = random_pet.this.id
+    }
+    output "parameter_name" {
+      value = aws_ssm_parameter.this.name
     }
   }
 }
@@ -78,7 +109,7 @@ script "apply" {
   job {
     commands = [
       ["tofu", "init", "-input=false"],
-      ["tofu", "apply", "-input=false", "-lock=false", "-auto-approve", "stack.otplan"],
+      ["tofu", "apply", "-input=false", "-auto-approve", "stack.otplan"],
     ]
   }
 }

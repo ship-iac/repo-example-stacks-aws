@@ -4,12 +4,16 @@ A minimal [Terramate](https://terramate.io/) + [OpenTofu](https://opentofu.org/)
 monorepo that exercises the **shipmate** GitHub Actions against a realistic
 multi-stack, multi-environment dependency graph — code generation, stack
 discovery by tag, dependency-graph (`after`) ordering, and three common CI
-failure modes — **without touching any real cloud**.
+failure modes — against a **real S3 backend** and a deliberately tiny AWS
+footprint.
 
-- Every stack manages only `random_pet` / `terraform_data` null resources.
-- State is **local** (`.state/<env>/<region>/terraform.tfstate` per stack).
-- **Zero cloud credentials** are required to run any of it by hand; the
-  workflows assume a role via OIDC, which the local-backend stacks never use.
+- Every stack manages `random_pet` / `terraform_data` null resources plus one
+  `aws_ssm_parameter`.
+- State lives in **S3** with native locking (`use_lockfile`), keyed per stack
+  at `repo-example-stacks-aws/<env>/<region>/<stack>/terraform.tfstate`.
+- Running anything by hand needs **AWS credentials in the environment** — the
+  SDK default chain; no profile or role is baked into the HCL, so the same
+  generated code runs locally and under the workflows' OIDC role.
 
 This is the **DRY / dynamic-backend** layout: one stack directory is applied
 N times, once per environment, distinguished only by the `TF_VAR_env` /
@@ -149,9 +153,12 @@ Nothing in a stack's generated code hardcodes an environment or region.
 
 - `_variables.tf` declaring `var.env`, `var.region` (both required, no
   default), plus `var.app_version` and `var.fail_precondition`.
-- `_backend.tf` pointing the local backend at
-  `.state/${var.env}/${var.region}/terraform.tfstate` — so state never collides
-  across environments even though it's the same directory.
+- `_backend.tf` pointing the S3 backend at
+  `repo-example-stacks-aws/${var.env}/${var.region}/<stack>/terraform.tfstate` —
+  so state never collides across environments even though it's the same
+  directory.
+- `_providers.tf` configuring the AWS provider for `var.region`, and `_main.tf`
+  an `aws_ssm_parameter` named after the env and stack.
 
 In CI the values come from each GitHub Environment (`TF_VAR_env`,
 `TF_VAR_region`). By hand you export them:
