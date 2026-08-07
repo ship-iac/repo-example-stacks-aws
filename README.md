@@ -154,7 +154,7 @@ Nothing in a stack's generated code hardcodes an environment or region.
 - `_variables.tf` declaring `var.env`, `var.region` (both required, no
   default), plus `var.app_version` and `var.fail_precondition`.
 - `_backend.tf` pointing the S3 backend at
-  `repo-example-stacks-aws/${var.env}/${var.region}<stack>/terraform.tfstate` —
+  `repo-example-stacks-aws/${var.env}/${var.region}/<stack>/terraform.tfstate` —
   so state never collides across environments even though it's the same
   directory.
 - `_providers.tf` configuring the AWS provider for `var.region`, and `_main.tf`
