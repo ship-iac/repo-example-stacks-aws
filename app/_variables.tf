@@ -14,3 +14,7 @@ variable "fail_precondition" {
   default = false
   type    = bool
 }
+variable "use_profile" {
+  default = false
+  type    = bool
+}

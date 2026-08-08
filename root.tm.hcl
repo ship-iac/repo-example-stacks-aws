@@ -1,8 +1,13 @@
 globals {
-  version = "6"
+  version        = "8"
+  workload       = "platform"
+  state_role_arn = "arn:aws:iam::981781037707:role/shipmate-state"
 }
 
+# Two blocks, mutually exclusive conditions: Terramate 0.17.1 has no `tm_unset()`,
+# and bare `unset` emits `assume_role = unset`, surviving fmt and validate to die at init.
 generate_hcl "_backend.tf" {
+  condition = global.state_role_arn != ""
   content {
     terraform {
       backend "s3" {
@@ -11,9 +16,26 @@ generate_hcl "_backend.tf" {
         region       = "eu-north-1"
         use_lockfile = true
         encrypt      = true
+        profile      = var.use_profile ? "${global.workload}-${var.env}" : null
         assume_role = {
-          role_arn = "arn:aws:iam::981781037707:role/shipmate-state"
+          role_arn = global.state_role_arn
         }
+      }
+    }
+  }
+}
+
+generate_hcl "_backend.tf" {
+  condition = global.state_role_arn == ""
+  content {
+    terraform {
+      backend "s3" {
+        bucket       = "repo-examples-shipmate-state"
+        key          = "repo-example-stacks-aws/${var.env}/${var.region}${terramate.stack.path.absolute}/terraform.tfstate"
+        region       = "eu-north-1"
+        use_lockfile = true
+        encrypt      = true
+        profile      = var.use_profile ? "${global.workload}-${var.env}" : null
       }
     }
   }
@@ -37,7 +59,8 @@ generate_hcl "_providers.tf" {
       }
     }
     provider "aws" {
-      region = var.region
+      region  = var.region
+      profile = var.use_profile ? "${global.workload}-${var.env}" : null
       default_tags {
         tags = {
           shipmate-env   = var.env
@@ -57,6 +80,12 @@ generate_hcl "_variables.tf" {
       default = global.version
     }
     variable "fail_precondition" {
+      type    = bool
+      default = false
+    }
+    # Defaults false: CI runs on ambient OIDC credentials and the apply path
+    # has no way to set it.
+    variable "use_profile" {
       type    = bool
       default = false
     }

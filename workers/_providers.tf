@@ -13,7 +13,8 @@ terraform {
   }
 }
 provider "aws" {
-  region = var.region
+  profile = var.use_profile ? "platform-${var.env}" : null
+  region  = var.region
   default_tags {
     tags = {
       shipmate-env   = var.env

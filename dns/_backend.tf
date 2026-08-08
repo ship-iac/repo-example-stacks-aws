@@ -8,6 +8,7 @@ terraform {
     bucket       = "repo-examples-shipmate-state"
     encrypt      = true
     key          = "repo-example-stacks-aws/${var.env}/${var.region}/dns/terraform.tfstate"
+    profile      = var.use_profile ? "network-${var.env}" : null
     region       = "eu-north-1"
     use_lockfile = true
   }
