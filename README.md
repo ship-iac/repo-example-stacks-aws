@@ -11,10 +11,10 @@ footprint.
   `aws_ssm_parameter`.
 - State lives in **S3** with native locking (`use_lockfile`), keyed per stack
   at `repo-example-stacks-aws/<env>/<region>/<stack>/terraform.tfstate`.
-- Running anything by hand needs **AWS credentials in the environment** — the
-  SDK default chain. Credentials never appear in the HCL; identity *names* do,
-  as data: each stack derives its own AWS profile name from a `workload` global,
-  used only when you opt in with `TF_VAR_use_profile=true`. See
+- Running anything by hand needs **AWS credentials** — either ambient in the
+  environment (the SDK default chain) or, with `TF_VAR_use_profile=true`, a
+  named profile each stack derives for itself. Credentials never appear in the
+  HCL; identity *names* do, as data. See
   [Local AWS profiles](#local-aws-profiles).
 
 This is the **DRY / dynamic-backend** layout: one stack directory is applied
@@ -200,10 +200,11 @@ profile = var.use_profile ? "platform-${var.env}" : null
 | `dns` | `network` | dev-us | `network-dev-us` |
 | `sandbox/box` | `sandbox` | sbx | `sandbox-sbx` |
 
+This global is unrelated to the engine's optional `workload/<name>` stack tag
+(`dns` carries `workload/net`), which only labels matrix cells.
+
 Terramate resolves `global.workload` at generate time and passes `var.env`
 through, so the committed file carries the literal workload and the runtime env.
-There is no lookup map — a map is a second source of truth that drifts from the
-account list.
 
 This repo's env values carry the region (`dev-eu`), so the names read
 `platform-dev-eu`. A repo that keeps the region in `var.region` and sets
@@ -227,16 +228,21 @@ The default is `false` and not `true` because **the apply path cannot set it**.
 The engine's reusable apply workflow forwards exactly `TF_VAR_env`,
 `TF_VAR_region` and `TF_WORKSPACE`, and a consumer calling a reusable workflow
 via `jobs.<id>.uses` may not add `env:`. A `true` default plans green locally
-and dies on the first real apply.
-
-Local is the side with a shell, so local carries the override.
+and dies on the first real apply. Local, which has a shell, carries the
+override.
 
 ### Running under profiles
 
-Alias one `~/.aws/config` block per derived name. In this sample every alias
-points at the same sandbox account; in a real repo each is a distinct account:
+Define an SSO session, then one `~/.aws/config` profile per derived name. In
+this sample every profile points at the same sandbox account; in a real repo
+each is a distinct account:
 
 ```ini
+[sso-session local]
+sso_start_url = https://<your-portal>.awsapps.com/start
+sso_region = eu-north-1
+sso_registration_scopes = sso:account:access
+
 [profile platform-dev-eu]
 sso_session    = local
 sso_account_id = 981781037707
@@ -247,6 +253,7 @@ region         = eu-north-1
 ```
 
 ```bash
+aws sso login --sso-session local
 export TF_VAR_use_profile=true
 export TF_VAR_env=dev-eu TF_VAR_region=eu-west-1
 terramate script run --tags env/dev-eu plan
@@ -254,8 +261,10 @@ terramate script run --tags env/dev-eu plan
 
 That one invocation resolves **two** profiles, `platform-dev-eu` and
 `product-dev-eu` — the property a shell-level `AWS_PROFILE` cannot provide.
-OpenTofu 1.12.4 accepts both the ternary and its `null` result inside
-`backend "s3"`.
+
+Where a stack's backend carries `assume_role`, the profile is only the *base*
+identity: the role named in `state_role_arn` must trust it, or `tofu init`
+fails at the state hop however privileged your session is.
 
 ## Driving a stack by hand
 
