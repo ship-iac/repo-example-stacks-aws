@@ -1,5 +1,4 @@
 terramate {
   config {
-    experiments = ["scripts"]
   }
 }
