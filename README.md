@@ -269,6 +269,13 @@ terramate script run --tags env/dev-eu plan
 That one invocation resolves **two** profiles, `platform-dev-eu` and
 `product-dev-eu` — the property a shell-level `AWS_PROFILE` cannot provide.
 
+Because `profile` sits inside the `backend "s3"` block, flipping
+`TF_VAR_use_profile` changes the recorded backend configuration, and a stack
+directory initialized under the old value refuses to re-init ("Backend
+configuration changed"). The `plan` and `apply` scripts pass `-reconfigure`, so
+toggling just works; a raw `tofu init` in a stack directory needs it too. The
+state path is unaffected, so there is nothing to migrate.
+
 The chain is the point: **each alias assumes that cell's CI _apply_ role, so a
 local apply is byte-identical to CI's apply.** A local *plan* is not — CI plans
 under a read-only role, so locally you hold strictly more than a CI plan job

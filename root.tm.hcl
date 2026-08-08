@@ -127,7 +127,10 @@ script "plan" {
   description = "plan this stack"
   job {
     commands = [
-      ["tofu", "init", "-input=false"],
+      # -reconfigure: `profile` is part of the backend config, so toggling
+      # use_profile locally would otherwise fail on a pre-existing .terraform/.
+      # No-op in CI, where nothing pre-exists.
+      ["tofu", "init", "-input=false", "-reconfigure"],
       ["tofu", "plan", "-input=false", "-lock=false", "-out=stack.otplan"],
     ]
   }
@@ -137,7 +140,7 @@ script "apply" {
   description = "apply this stack"
   job {
     commands = [
-      ["tofu", "init", "-input=false"],
+      ["tofu", "init", "-input=false", "-reconfigure"],
       ["tofu", "apply", "-input=false", "-auto-approve", "stack.otplan"],
     ]
   }
