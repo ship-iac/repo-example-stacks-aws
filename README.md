@@ -272,9 +272,10 @@ That one invocation resolves **two** profiles, `platform-dev-eu` and
 The chain is the point: **each alias assumes that cell's CI _apply_ role, so a
 local apply is byte-identical to CI's apply.** A local *plan* is not — CI plans
 under a read-only role, so locally you hold strictly more than a CI plan job
-does. It is also required, not merely tidy. A plain SSO profile fails on every stack whose backend carries `assume_role`, because the
-state role trusts the CI roles and not a raw SSO identity; the base profile only
-needs to be trusted by the CI roles themselves. `sandbox/box` is the exception —
+does. It is also required, not merely tidy. A plain SSO profile fails on every
+stack whose backend carries `assume_role`, because the state role trusts the CI
+roles and not a raw SSO identity; the base profile only needs to be trusted by
+the CI roles themselves. `sandbox/box` is the exception —
 it has no state hop, so its alias chains to the sandbox environment's own role
 rather than the shared one.
 
