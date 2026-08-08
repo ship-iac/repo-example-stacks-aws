@@ -18,7 +18,7 @@ jobs:
     environment: shipmate-engine
     steps:
       - id: authz
-        uses: ship-iac/shipmate/actions/comment-ops@5ee006bca6935e70a63b65bcd3f91f60efd7c179 # v0.8.0
+        uses: ship-iac/shipmate/actions/comment-ops@bec15e4c830307a6234b00fba14c8dab21704b71 # v0.8.1
         with:
           app-id: ${{ vars.SHIPMATE_APP_ID }}
           private-key: ${{ secrets.SHIPMATE_APP_PRIVATE_KEY }}
@@ -29,7 +29,7 @@ jobs:
           pr-number: ${{ github.event.issue.number }}
           github-token: ${{ github.token }}
       - if: ${{ steps.authz.outputs.authorized == 'true' }}
-        uses: ship-iac/shipmate/actions/dispatch@5ee006bca6935e70a63b65bcd3f91f60efd7c179 # v0.8.0
+        uses: ship-iac/shipmate/actions/dispatch@bec15e4c830307a6234b00fba14c8dab21704b71 # v0.8.1
         with:
           app-id: ${{ vars.SHIPMATE_APP_ID }}
           private-key: ${{ secrets.SHIPMATE_APP_PRIVATE_KEY }}
