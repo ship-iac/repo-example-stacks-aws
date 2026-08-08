@@ -79,11 +79,11 @@ Expect `tofu plan` to show 2 resources to add (`random_pet.this`,
 
 ```
 repo-example-stacks-aws/
-├── terramate.tm.hcl      # enables the "scripts" experiment
+├── terramate.tm.hcl      # project root marker
 ├── env-order.tm.hcl      # cross-environment apply order
 ├── tools/
 │   └── mutate-state.ps1  # drift fixture helper
-├── root.tm.hcl           # shared globals + generate_hcl blocks + scripts,
+├── root.tm.hcl           # shared globals + generate_hcl blocks,
 │                         # inherited by every stack beside it
 ├── dns/                  # env/dev-us
 ├── platform/             # env/dev-eu, after dns
@@ -263,7 +263,8 @@ region         = eu-north-1
 aws sso login --sso-session my-sso
 export TF_VAR_use_profile=true
 export TF_VAR_env=dev-eu TF_VAR_region=eu-west-1
-terramate script run --tags env/dev-eu plan
+terramate run --tags env/dev-eu -- tofu init -input=false -reconfigure
+terramate run --tags env/dev-eu -- tofu plan -input=false -lock=false -out=stack.otplan
 ```
 
 That one invocation resolves **two** profiles, `platform-dev-eu` and
@@ -272,7 +273,7 @@ That one invocation resolves **two** profiles, `platform-dev-eu` and
 Because `profile` sits inside the `backend "s3"` block, flipping
 `TF_VAR_use_profile` changes the recorded backend configuration, and a stack
 directory initialized under the old value refuses to re-init ("Backend
-configuration changed"). The `plan` and `apply` scripts pass `-reconfigure`, so
+configuration changed"). The engine passes `-reconfigure` on every init, so
 toggling just works; a raw `tofu init` in a stack directory needs it too. The
 state path is unaffected, so there is nothing to migrate.
 
@@ -301,13 +302,13 @@ tofu init -input=false
 tofu plan -input=false
 ```
 
-Terramate also ships two convenience scripts (defined in `root.tm.hcl`,
-needing the `scripts` experiment already enabled in `terramate.tm.hcl`), run
-from inside a stack directory with the vars still exported:
+shipmate names the commands it runs, so this repository defines no Terramate
+scripts. To reproduce a cell exactly as CI runs it, with the vars still
+exported:
 
 ```bash
-terramate script run plan    # tofu init && tofu plan -out=stack.otplan
-terramate script run apply   # tofu init && tofu apply -auto-approve stack.otplan
+terramate run --no-recursive -C dns -- tofu init -input=false -reconfigure
+terramate run --no-recursive -C dns -- tofu plan -input=false -lock=false -out=stack.otplan
 ```
 
 ## Failure fixtures

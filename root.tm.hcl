@@ -1,5 +1,5 @@
 globals {
-  version        = "8"
+  version        = "9"
   workload       = "platform"
   state_role_arn = "arn:aws:iam::981781037707:role/shipmate-state"
 }
@@ -120,28 +120,5 @@ generate_hcl "_main.tf" {
     output "parameter_name" {
       value = aws_ssm_parameter.this.name
     }
-  }
-}
-
-script "plan" {
-  description = "plan this stack"
-  job {
-    commands = [
-      # -reconfigure: `profile` is part of the backend config, so toggling
-      # use_profile locally would otherwise fail on a pre-existing .terraform/.
-      # No-op in CI, where nothing pre-exists.
-      ["tofu", "init", "-input=false", "-reconfigure"],
-      ["tofu", "plan", "-input=false", "-lock=false", "-out=stack.otplan"],
-    ]
-  }
-}
-
-script "apply" {
-  description = "apply this stack"
-  job {
-    commands = [
-      ["tofu", "init", "-input=false", "-reconfigure"],
-      ["tofu", "apply", "-input=false", "-auto-approve", "stack.otplan"],
-    ]
   }
 }
