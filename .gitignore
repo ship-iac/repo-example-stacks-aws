@@ -3,3 +3,4 @@
 .state/
 *.otplan
 fingerprint.txt
+.idea/
