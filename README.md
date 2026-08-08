@@ -212,7 +212,10 @@ This repo's env values carry the region (`dev-eu`), so the names read
 
 The same inheritance also carries `state_role_arn`, the role the S3 backend
 assumes for state. Where it is set, `_backend.tf` emits `assume_role`;
-`sandbox/box` sets it to `""` and emits none, reaching the bucket directly.
+`sandbox/box` sets it to `""` and emits none, reaching the bucket directly. That
+branch is not free: the shared CI roles hold no S3 permissions at all — state
+access is what the hop is *for* — so an environment that skips the hop needs its
+own role pair granted the bucket directly.
 Terramate 0.17.1 has no `tm_unset()`, so `root.tm.hcl` carries two
 `generate_hcl "_backend.tf"` blocks with mutually exclusive `condition`s rather
 than one block with an optional attribute.
@@ -233,27 +236,31 @@ override.
 
 ### Running under profiles
 
-Define an SSO session, then one `~/.aws/config` profile per derived name. In
-this sample every profile points at the same sandbox account; in a real repo
-each is a distinct account:
+One SSO profile is the base; each derived name is a **chained** profile that
+assumes the same role CI uses for that cell:
 
 ```ini
-[sso-session local]
+[sso-session my-sso]
 sso_start_url = https://<your-portal>.awsapps.com/start
 sso_region = eu-north-1
 sso_registration_scopes = sso:account:access
 
-[profile platform-dev-eu]
-sso_session    = local
-sso_account_id = 981781037707
+[profile base]
+sso_session    = my-sso
+sso_account_id = <account-id>
 sso_role_name  = AdministratorAccess
 region         = eu-north-1
-# …identical blocks for product-dev-eu, product-dev-us, network-dev-us,
-#   sandbox-sbx
+
+[profile platform-dev-eu]
+role_arn       = arn:aws:iam::<account-id>:role/<the CI role for this cell>
+source_profile = base
+region         = eu-north-1
+# …one such block per derived name: product-dev-eu, product-dev-us,
+#   network-dev-us, sandbox-sbx
 ```
 
 ```bash
-aws sso login --sso-session local
+aws sso login --sso-session my-sso
 export TF_VAR_use_profile=true
 export TF_VAR_env=dev-eu TF_VAR_region=eu-west-1
 terramate script run --tags env/dev-eu plan
@@ -262,9 +269,14 @@ terramate script run --tags env/dev-eu plan
 That one invocation resolves **two** profiles, `platform-dev-eu` and
 `product-dev-eu` — the property a shell-level `AWS_PROFILE` cannot provide.
 
-Where a stack's backend carries `assume_role`, the profile is only the *base*
-identity: the role named in `state_role_arn` must trust it, or `tofu init`
-fails at the state hop however privileged your session is.
+The chain is the point: **each alias assumes the same role CI assumes for that
+cell, so a local run has byte-identical permissions to CI** — "works locally,
+fails in CI" cannot happen. It is also required, not merely tidy. A plain SSO
+profile fails on every stack whose backend carries `assume_role`, because the
+state role trusts the CI roles and not a raw SSO identity; the base profile only
+needs to be trusted by the CI roles themselves. `sandbox/box` is the exception —
+it has no state hop, so its alias chains to the sandbox environment's own role
+rather than the shared one.
 
 ## Driving a stack by hand
 
