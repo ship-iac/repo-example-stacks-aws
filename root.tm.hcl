@@ -4,8 +4,8 @@ globals {
   state_role_arn = "arn:aws:iam::981781037707:role/shipmate-state"
 }
 
-# Two blocks, mutually exclusive conditions: HCL has no way to omit a single
-# attribute, so the no-`assume_role` shape needs its own block.
+# Two blocks, mutually exclusive conditions: Terramate 0.17.1 has no `tm_unset()`,
+# and bare `unset` emits `assume_role = unset`, surviving fmt and validate to die at init.
 generate_hcl "_backend.tf" {
   condition = global.state_role_arn != ""
   content {
