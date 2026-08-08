@@ -12,8 +12,10 @@ footprint.
 - State lives in **S3** with native locking (`use_lockfile`), keyed per stack
   at `repo-example-stacks-aws/<env>/<region>/<stack>/terraform.tfstate`.
 - Running anything by hand needs **AWS credentials in the environment** — the
-  SDK default chain; no profile or role is baked into the HCL, so the same
-  generated code runs locally and under the workflows' OIDC role.
+  SDK default chain. Credentials never appear in the HCL; identity *names* do,
+  as data: each stack derives its own AWS profile name from a `workload` global,
+  used only when you opt in with `TF_VAR_use_profile=true`. See
+  [Local AWS profiles](#local-aws-profiles).
 
 This is the **DRY / dynamic-backend** layout: one stack directory is applied
 N times, once per environment, distinguished only by the `TF_VAR_env` /
@@ -60,6 +62,9 @@ terramate experimental run-graph
 cd dns
 export TF_VAR_env=dev-us
 export TF_VAR_region=us-east-1
+# Optional: run under the stack's own AWS profile instead of ambient
+# credentials. Needs a [profile network-dev-us] block — see "Local AWS profiles".
+# export TF_VAR_use_profile=true
 tofu init -input=false
 tofu plan -input=false
 ```
@@ -152,7 +157,8 @@ Nothing in a stack's generated code hardcodes an environment or region.
 `root.tm.hcl` generates:
 
 - `_variables.tf` declaring `var.env`, `var.region` (both required, no
-  default), plus `var.app_version` and `var.fail_precondition`.
+  default), plus `var.app_version`, `var.fail_precondition` and
+  `var.use_profile`.
 - `_backend.tf` pointing the S3 backend at
   `repo-example-stacks-aws/${var.env}/${var.region}/<stack>/terraform.tfstate` —
   so state never collides across environments even though it's the same
@@ -170,9 +176,91 @@ In CI the values come from each GitHub Environment (`TF_VAR_env`,
 | auth/workers | `TF_VAR_env=dev-eu TF_VAR_region=eu-west-1` |
 | app/tenant-* | `dev-eu`/`eu-west-1` **or** `dev-us`/`us-east-1` (run once per env) |
 
+## Local AWS profiles
+
+Real AWS accounts are `(workload, env)` pairs — `platform-dev`, `product-dev`,
+`network-prod` — and the profile name is the account alias. One
+`terramate run` crosses workloads, therefore accounts, so a single shell-level
+`AWS_PROFILE` cannot express it: the *env* half is uniform per invocation, the
+*workload* half varies stack by stack.
+
+So the workload half comes from repo config. Each stack carries a `workload`
+global and the generated HCL derives its own name:
+
+```hcl
+profile = var.use_profile ? "platform-${var.env}" : null
+```
+
+`workload` is a root default in `root.tm.hcl`, overridden per stack directory:
+
+| Stack | `workload` | envs | derived profile(s) |
+|---|---|---|---|
+| `platform`, `auth`, `workers` | `platform` (root default) | dev-eu | `platform-dev-eu` |
+| `app`, `tenant-a`, `tenant-b` | `product` | dev-eu, dev-us | `product-dev-eu`, `product-dev-us` |
+| `dns` | `network` | dev-us | `network-dev-us` |
+| `sandbox/box` | `sandbox` | sbx | `sandbox-sbx` |
+
+Terramate resolves `global.workload` at generate time and passes `var.env`
+through, so the committed file carries the literal workload and the runtime env.
+There is no lookup map — a map is a second source of truth that drifts from the
+account list.
+
+This repo's env values carry the region (`dev-eu`), so the names read
+`platform-dev-eu`. A repo that keeps the region in `var.region` and sets
+`var.env = dev` derives `platform-dev` — the account alias exactly.
+
+The same inheritance also carries `state_role_arn`, the role the S3 backend
+assumes for state. Where it is set, `_backend.tf` emits `assume_role`;
+`sandbox/box` sets it to `""` and emits none, reaching the bucket directly.
+Terramate 0.17.1 has no `tm_unset()`, so `root.tm.hcl` carries two
+`generate_hcl "_backend.tf"` blocks with mutually exclusive `condition`s rather
+than one block with an optional attribute.
+
+### CI needs no configuration
+
+`var.use_profile` defaults to **`false`**, so `profile` resolves to `null`, the
+SDK default chain applies, and CI runs on the OIDC credentials
+`configure-aws-credentials` puts in the environment — byte-identical to the
+behavior before profiles existed. Nothing to set when an environment is added.
+
+The default is `false` and not `true` because **the apply path cannot set it**.
+The engine's reusable apply workflow forwards exactly `TF_VAR_env`,
+`TF_VAR_region` and `TF_WORKSPACE`, and a consumer calling a reusable workflow
+via `jobs.<id>.uses` may not add `env:`. A `true` default plans green locally
+and dies on the first real apply.
+
+Local is the side with a shell, so local carries the override.
+
+### Running under profiles
+
+Alias one `~/.aws/config` block per derived name. In this sample every alias
+points at the same sandbox account; in a real repo each is a distinct account:
+
+```ini
+[profile platform-dev-eu]
+sso_session    = local
+sso_account_id = 981781037707
+sso_role_name  = AdministratorAccess
+region         = eu-north-1
+# …identical blocks for product-dev-eu, product-dev-us, network-dev-us,
+#   sandbox-sbx
+```
+
+```bash
+export TF_VAR_use_profile=true
+export TF_VAR_env=dev-eu TF_VAR_region=eu-west-1
+terramate script run --tags env/dev-eu plan
+```
+
+That one invocation resolves **two** profiles, `platform-dev-eu` and
+`product-dev-eu` — the property a shell-level `AWS_PROFILE` cannot provide.
+OpenTofu 1.12.4 accepts both the ternary and its `null` result inside
+`backend "s3"`.
+
 ## Driving a stack by hand
 
-`cd` into a stack, set the two required vars, `tofu init`, `tofu plan` (add
+`cd` into a stack, set the two required vars (plus `TF_VAR_use_profile=true` to
+run under the stack's own profile), `tofu init`, `tofu plan` (add
 `tofu apply -auto-approve` to actually create the null resources). Example,
 `platform` (dev-eu / eu-west-1):
 
