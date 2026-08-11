@@ -11,7 +11,7 @@ jobs:
   detect:
     name: shipmate / detect
     if: github.event.pull_request.draft == false
-    runs-on: ubuntu-slim
+    runs-on: ubuntu-latest
     permissions:
       contents: read
     outputs:
@@ -42,7 +42,7 @@ jobs:
   plan:
     needs: detect
     if: needs.detect.outputs.empty == 'false'
-    runs-on: ubuntu-slim
+    runs-on: ubuntu-latest
     permissions:
       contents: read
       id-token: write

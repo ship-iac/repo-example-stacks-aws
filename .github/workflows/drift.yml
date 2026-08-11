@@ -15,7 +15,7 @@ jobs:
     # intentionally left ungated -- a `gh workflow run drift.yml --ref
     # <branch>` dispatch on a feature branch fails visibly at the two gated
     # jobs below instead of this job silently doing nothing.
-    runs-on: ubuntu-slim
+    runs-on: ubuntu-latest
     outputs:
       matrix: ${{ steps.m.outputs.matrix }}
       empty: ${{ steps.m.outputs.empty }}
@@ -42,7 +42,7 @@ jobs:
   drift:
     needs: detect
     if: ${{ needs.detect.outputs.empty == 'false' && github.ref == format('refs/heads/{0}', needs.detect.outputs.default_branch) }}
-    runs-on: ubuntu-slim
+    runs-on: ubuntu-latest
     permissions: { contents: read, id-token: write }
     strategy:
       fail-fast: false
@@ -82,7 +82,7 @@ jobs:
     # closed none. `detect` already tells the two apart, so an empty matrix
     # skips this job outright and a failed download now fails it.
     if: ${{ always() && needs.detect.outputs.empty == 'false' && github.ref == format('refs/heads/{0}', needs.detect.outputs.default_branch) }}
-    runs-on: ubuntu-slim
+    runs-on: ubuntu-latest
     environment: shipmate-engine
     permissions: { actions: read }
     steps:

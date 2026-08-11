@@ -14,7 +14,7 @@ jobs:
   ops:
     # Only PR comments (issue_comment fires on issues too).
     if: ${{ github.event.issue.pull_request }}
-    runs-on: ubuntu-slim
+    runs-on: ubuntu-latest
     environment: shipmate-engine
     steps:
       - id: authz

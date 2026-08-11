@@ -22,7 +22,7 @@ permissions:
   pull-requests: write
 jobs:
   review:
-    runs-on: ubuntu-slim
+    runs-on: ubuntu-latest
     steps:
       - name: Post review as github-actions[bot]
         env:
