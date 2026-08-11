@@ -147,9 +147,10 @@ Confirm it:
 terramate experimental run-graph --label stack.dir
 ```
 
-prints DOT with edges `dns->platform`, `platform->auth`, `platform->workers`,
-`auth->app`, `workers->app`, `app->tenant-a`, `app->tenant-b`, and `box` with
-no edges.
+prints DOT with one node per stack, labelled by directory. The edge lines
+reference the generated node ids rather than the labels, but the graph they
+describe is `/dns` → `/platform` → `/auth` and `/workers`, both of those →
+`/app`, and `/app` → `/tenant-a` and `/tenant-b`. `/sandbox/box` has no edges.
 
 ## Environment / region model
 
