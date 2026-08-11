@@ -26,7 +26,7 @@ jobs:
         with:
           ref: ${{ github.event.pull_request.head.sha }}
           fetch-depth: 0
-      - uses: ship-iac/shipmate/actions/setup@40347466fed3591d4382464262e4ac3ef50e0cdc # v0.11.0
+      - uses: ship-iac/shipmate/actions/setup@e9eb27d95db69b4ba937347be6e4ade4d7ce8210 # v0.12.0
         with:
           terramate-version: ${{ vars.TERRAMATE_VERSION }}
           tofu-version: ${{ vars.TOFU_VERSION }}
@@ -35,7 +35,7 @@ jobs:
       - name: stale codegen check
         run: terramate generate --detailed-exit-code
       - id: matrix
-        uses: ship-iac/shipmate/actions/build-matrix@40347466fed3591d4382464262e4ac3ef50e0cdc # v0.11.0
+        uses: ship-iac/shipmate/actions/build-matrix@e9eb27d95db69b4ba937347be6e4ade4d7ce8210 # v0.12.0
         with:
           base-sha: ${{ github.event.pull_request.base.sha }}
 
@@ -59,7 +59,7 @@ jobs:
         with:
           ref: ${{ github.event.pull_request.head.sha }}
           fetch-depth: 0
-      - uses: ship-iac/shipmate/actions/setup@40347466fed3591d4382464262e4ac3ef50e0cdc # v0.11.0
+      - uses: ship-iac/shipmate/actions/setup@e9eb27d95db69b4ba937347be6e4ade4d7ce8210 # v0.12.0
         with:
           terramate-version: ${{ vars.TERRAMATE_VERSION }}
           tofu-version: ${{ vars.TOFU_VERSION }}
@@ -67,7 +67,7 @@ jobs:
         with:
           role-to-assume: ${{ vars.AWS_ROLE_ARN }}
           aws-region: ${{ vars.AWS_REGION }}
-      - uses: ship-iac/shipmate/actions/plan-cell@40347466fed3591d4382464262e4ac3ef50e0cdc # v0.11.0
+      - uses: ship-iac/shipmate/actions/plan-cell@e9eb27d95db69b4ba937347be6e4ade4d7ce8210 # v0.12.0
         with:
           stack: ${{ matrix.stack }}
           stack-name: ${{ matrix.stack }}
@@ -82,10 +82,11 @@ jobs:
   summary:
     needs: [detect, plan]
     if: ${{ !cancelled() }}
-    uses: ship-iac/shipmate/.github/workflows/summary.yml@40347466fed3591d4382464262e4ac3ef50e0cdc # v0.11.0
+    uses: ship-iac/shipmate/.github/workflows/summary.yml@e9eb27d95db69b4ba937347be6e4ade4d7ce8210 # v0.12.0
     permissions:
       contents: read
-    secrets: inherit
+    secrets:
+      SHIPMATE_APP_PRIVATE_KEY: ${{ secrets.SHIPMATE_APP_PRIVATE_KEY }}
     with:
       pr-number: ${{ github.event.pull_request.number }}
       head-sha: ${{ github.event.pull_request.head.sha }}
