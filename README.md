@@ -56,7 +56,7 @@ terramate generate
 terramate list --tags env/dev-eu
 
 # Print the full cross-stack dependency graph (Graphviz DOT).
-terramate experimental run-graph
+terramate experimental run-graph --label stack.dir
 
 # Drive one stack: dns is dev-us / us-east-1.
 cd dns
@@ -144,7 +144,7 @@ DAG is what `deploy.yml` walks in waves.
 Confirm it:
 
 ```bash
-terramate experimental run-graph
+terramate experimental run-graph --label stack.dir
 ```
 
 prints DOT with edges `dns->platform`, `platform->auth`, `platform->workers`,
