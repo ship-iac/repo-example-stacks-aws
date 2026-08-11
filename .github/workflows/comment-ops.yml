@@ -14,11 +14,11 @@ jobs:
   ops:
     # Only PR comments (issue_comment fires on issues too).
     if: ${{ github.event.issue.pull_request }}
-    runs-on: ubuntu-slim
+    runs-on: ubuntu-latest
     environment: shipmate-engine
     steps:
       - id: authz
-        uses: ship-iac/shipmate/actions/comment-ops@bbd9a74106ac98c84d2581b69bc877e6ebec6da2 # v0.10.0
+        uses: ship-iac/shipmate/actions/comment-ops@40347466fed3591d4382464262e4ac3ef50e0cdc # v0.11.0
         with:
           app-id: ${{ vars.SHIPMATE_APP_ID }}
           private-key: ${{ secrets.SHIPMATE_APP_PRIVATE_KEY }}
@@ -29,7 +29,7 @@ jobs:
           pr-number: ${{ github.event.issue.number }}
           github-token: ${{ github.token }}
       - if: ${{ steps.authz.outputs.authorized == 'true' }}
-        uses: ship-iac/shipmate/actions/dispatch@bbd9a74106ac98c84d2581b69bc877e6ebec6da2 # v0.10.0
+        uses: ship-iac/shipmate/actions/dispatch@40347466fed3591d4382464262e4ac3ef50e0cdc # v0.11.0
         with:
           app-id: ${{ vars.SHIPMATE_APP_ID }}
           private-key: ${{ secrets.SHIPMATE_APP_PRIVATE_KEY }}
