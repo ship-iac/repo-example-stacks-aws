@@ -26,7 +26,7 @@ jobs:
         with:
           ref: ${{ github.event.pull_request.head.sha }}
           fetch-depth: 0
-      - uses: ship-iac/shipmate/actions/setup@e9eb27d95db69b4ba937347be6e4ade4d7ce8210 # v0.12.0
+      - uses: ship-iac/shipmate/actions/setup@f485a78fc96ce2328262fdc0b371319b93c59eaa # v0.14.0
         with:
           terramate-version: ${{ vars.TERRAMATE_VERSION }}
           tofu-version: ${{ vars.TOFU_VERSION }}
@@ -35,7 +35,7 @@ jobs:
       - name: stale codegen check
         run: terramate generate --detailed-exit-code
       - id: matrix
-        uses: ship-iac/shipmate/actions/build-matrix@e9eb27d95db69b4ba937347be6e4ade4d7ce8210 # v0.12.0
+        uses: ship-iac/shipmate/actions/build-matrix@f485a78fc96ce2328262fdc0b371319b93c59eaa # v0.14.0
         with:
           base-sha: ${{ github.event.pull_request.base.sha }}
 
@@ -49,7 +49,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix: ${{ fromJSON(needs.detect.outputs.matrix) }}
-    environment: ${{ matrix.environment }}
+    environment: ${{ matrix.environment }}-plan
     name: ${{ matrix.stack }} / ${{ matrix.environment }}
     env:
       TF_VAR_env: ${{ vars.TF_VAR_env }}
@@ -59,7 +59,7 @@ jobs:
         with:
           ref: ${{ github.event.pull_request.head.sha }}
           fetch-depth: 0
-      - uses: ship-iac/shipmate/actions/setup@e9eb27d95db69b4ba937347be6e4ade4d7ce8210 # v0.12.0
+      - uses: ship-iac/shipmate/actions/setup@f485a78fc96ce2328262fdc0b371319b93c59eaa # v0.14.0
         with:
           terramate-version: ${{ vars.TERRAMATE_VERSION }}
           tofu-version: ${{ vars.TOFU_VERSION }}
@@ -67,7 +67,7 @@ jobs:
         with:
           role-to-assume: ${{ vars.AWS_ROLE_ARN }}
           aws-region: ${{ vars.AWS_REGION }}
-      - uses: ship-iac/shipmate/actions/plan-cell@e9eb27d95db69b4ba937347be6e4ade4d7ce8210 # v0.12.0
+      - uses: ship-iac/shipmate/actions/plan-cell@f485a78fc96ce2328262fdc0b371319b93c59eaa # v0.14.0
         with:
           stack: ${{ matrix.stack }}
           stack-name: ${{ matrix.stack }}
@@ -82,7 +82,7 @@ jobs:
   summary:
     needs: [detect, plan]
     if: ${{ !cancelled() }}
-    uses: ship-iac/shipmate/.github/workflows/summary.yml@e9eb27d95db69b4ba937347be6e4ade4d7ce8210 # v0.12.0
+    uses: ship-iac/shipmate/.github/workflows/summary.yml@f485a78fc96ce2328262fdc0b371319b93c59eaa # v0.14.0
     permissions:
       contents: read
     secrets:
