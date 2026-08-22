@@ -26,7 +26,7 @@ jobs:
         with:
           ref: ${{ github.event.pull_request.head.sha }}
           fetch-depth: 0
-      - uses: ship-iac/shipmate/actions/setup@19de76c35f05cc35f5fe7df9961739def5d5c192 # v0.15.0
+      - uses: ship-iac/shipmate/actions/setup@4fda446b06c11083f986d6695eafc79967927c56 # v0.16.0
         with:
           terramate-version: ${{ vars.TERRAMATE_VERSION }}
           tofu-version: ${{ vars.TOFU_VERSION }}
@@ -35,7 +35,7 @@ jobs:
       - name: stale codegen check
         run: terramate generate --detailed-exit-code
       - id: matrix
-        uses: ship-iac/shipmate/actions/build-matrix@19de76c35f05cc35f5fe7df9961739def5d5c192 # v0.15.0
+        uses: ship-iac/shipmate/actions/build-matrix@4fda446b06c11083f986d6695eafc79967927c56 # v0.16.0
         with:
           base-sha: ${{ github.event.pull_request.base.sha }}
 
@@ -59,7 +59,7 @@ jobs:
         with:
           ref: ${{ github.event.pull_request.head.sha }}
           fetch-depth: 0
-      - uses: ship-iac/shipmate/actions/setup@19de76c35f05cc35f5fe7df9961739def5d5c192 # v0.15.0
+      - uses: ship-iac/shipmate/actions/setup@4fda446b06c11083f986d6695eafc79967927c56 # v0.16.0
         with:
           terramate-version: ${{ vars.TERRAMATE_VERSION }}
           tofu-version: ${{ vars.TOFU_VERSION }}
@@ -67,7 +67,7 @@ jobs:
         with:
           role-to-assume: ${{ vars.AWS_ROLE_ARN }}
           aws-region: ${{ vars.AWS_REGION }}
-      - uses: ship-iac/shipmate/actions/plan-cell@19de76c35f05cc35f5fe7df9961739def5d5c192 # v0.15.0
+      - uses: ship-iac/shipmate/actions/plan-cell@4fda446b06c11083f986d6695eafc79967927c56 # v0.16.0
         with:
           stack: ${{ matrix.stack }}
           stack-name: ${{ matrix.stack }}
@@ -82,7 +82,7 @@ jobs:
   summary:
     needs: [detect, plan]
     if: ${{ !cancelled() }}
-    uses: ship-iac/shipmate/.github/workflows/summary.yml@19de76c35f05cc35f5fe7df9961739def5d5c192 # v0.15.0
+    uses: ship-iac/shipmate/.github/workflows/summary.yml@4fda446b06c11083f986d6695eafc79967927c56 # v0.16.0
     permissions:
       contents: read
     secrets:
