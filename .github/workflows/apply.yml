@@ -10,8 +10,14 @@ on:
         description: apply (default) or unlock — unlock releases a stranded state lock instead of applying
         required: false
         default: apply
-      ref: { description: PR head SHA to apply, required: true }
-      pr_number: { description: PR number, required: true }
+      ref:
+        description: PR head SHA to apply
+        required: false
+        default: ''
+      pr_number:
+        description: PR number
+        required: false
+        default: ''
       plan_run_id:
         description: Plan run id with the reviewed plans. Empty for `shipmate unlock`, which applies no plan — a required input rejects an empty value as "not provided".
         required: false
