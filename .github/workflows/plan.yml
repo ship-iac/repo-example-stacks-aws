@@ -26,7 +26,7 @@ jobs:
         with:
           ref: ${{ github.event.pull_request.head.sha }}
           fetch-depth: 0
-      - uses: ship-iac/shipmate/actions/setup@5f4a022cfbcee0fcc25960a7152997a2fdeeb1ff # v0.17.0
+      - uses: ship-iac/shipmate/actions/setup@468429a10e0c59ecd8092c8ff990286cf5a4584e # v0.18.0
         with:
           terramate-version: ${{ vars.TERRAMATE_VERSION }}
           tofu-version: ${{ vars.TOFU_VERSION }}
@@ -35,9 +35,10 @@ jobs:
       - name: stale codegen check
         run: terramate generate --detailed-exit-code
       - id: matrix
-        uses: ship-iac/shipmate/actions/build-matrix@5f4a022cfbcee0fcc25960a7152997a2fdeeb1ff # v0.17.0
+        uses: ship-iac/shipmate/actions/build-matrix@468429a10e0c59ecd8092c8ff990286cf5a4584e # v0.18.0
         with:
           base-sha: ${{ github.event.pull_request.base.sha }}
+          head-repo: ${{ github.event.pull_request.head.repo.full_name }}
 
   plan:
     needs: detect
@@ -59,7 +60,7 @@ jobs:
         with:
           ref: ${{ github.event.pull_request.head.sha }}
           fetch-depth: 0
-      - uses: ship-iac/shipmate/actions/setup@5f4a022cfbcee0fcc25960a7152997a2fdeeb1ff # v0.17.0
+      - uses: ship-iac/shipmate/actions/setup@468429a10e0c59ecd8092c8ff990286cf5a4584e # v0.18.0
         with:
           terramate-version: ${{ vars.TERRAMATE_VERSION }}
           tofu-version: ${{ vars.TOFU_VERSION }}
@@ -67,7 +68,7 @@ jobs:
         with:
           role-to-assume: ${{ vars.AWS_ROLE_ARN }}
           aws-region: ${{ vars.AWS_REGION }}
-      - uses: ship-iac/shipmate/actions/plan-cell@5f4a022cfbcee0fcc25960a7152997a2fdeeb1ff # v0.17.0
+      - uses: ship-iac/shipmate/actions/plan-cell@468429a10e0c59ecd8092c8ff990286cf5a4584e # v0.18.0
         with:
           stack: ${{ matrix.stack }}
           stack-name: ${{ matrix.stack }}
@@ -83,7 +84,7 @@ jobs:
   summary:
     needs: [detect, plan]
     if: ${{ !cancelled() }}
-    uses: ship-iac/shipmate/.github/workflows/summary.yml@5f4a022cfbcee0fcc25960a7152997a2fdeeb1ff # v0.17.0
+    uses: ship-iac/shipmate/.github/workflows/summary.yml@468429a10e0c59ecd8092c8ff990286cf5a4584e # v0.18.0
     permissions:
       contents: read
     secrets:
@@ -94,3 +95,5 @@ jobs:
       detect-result: ${{ needs.detect.result }}
       plan-result: ${{ needs.plan.result }}
       planned-cells: ${{ needs.detect.outputs.count }}
+      head-repo: ${{ github.event.pull_request.head.repo.full_name }}
+      is-draft: ${{ github.event.pull_request.draft }}
