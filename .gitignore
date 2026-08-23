@@ -3,4 +3,5 @@
 .state/
 *.otplan
 fingerprint.txt
+planned-head.txt
 .idea/
