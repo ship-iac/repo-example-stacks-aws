@@ -26,7 +26,7 @@ jobs:
         with:
           ref: ${{ github.event.pull_request.head.sha }}
           fetch-depth: 0
-      - uses: ship-iac/shipmate/actions/setup@69da4e495a61fa0264ececc510efdd5998f83dbf # v0.16.2
+      - uses: ship-iac/shipmate/actions/setup@5f4a022cfbcee0fcc25960a7152997a2fdeeb1ff # v0.17.0
         with:
           terramate-version: ${{ vars.TERRAMATE_VERSION }}
           tofu-version: ${{ vars.TOFU_VERSION }}
@@ -35,7 +35,7 @@ jobs:
       - name: stale codegen check
         run: terramate generate --detailed-exit-code
       - id: matrix
-        uses: ship-iac/shipmate/actions/build-matrix@69da4e495a61fa0264ececc510efdd5998f83dbf # v0.16.2
+        uses: ship-iac/shipmate/actions/build-matrix@5f4a022cfbcee0fcc25960a7152997a2fdeeb1ff # v0.17.0
         with:
           base-sha: ${{ github.event.pull_request.base.sha }}
 
@@ -59,7 +59,7 @@ jobs:
         with:
           ref: ${{ github.event.pull_request.head.sha }}
           fetch-depth: 0
-      - uses: ship-iac/shipmate/actions/setup@69da4e495a61fa0264ececc510efdd5998f83dbf # v0.16.2
+      - uses: ship-iac/shipmate/actions/setup@5f4a022cfbcee0fcc25960a7152997a2fdeeb1ff # v0.17.0
         with:
           terramate-version: ${{ vars.TERRAMATE_VERSION }}
           tofu-version: ${{ vars.TOFU_VERSION }}
@@ -67,11 +67,12 @@ jobs:
         with:
           role-to-assume: ${{ vars.AWS_ROLE_ARN }}
           aws-region: ${{ vars.AWS_REGION }}
-      - uses: ship-iac/shipmate/actions/plan-cell@69da4e495a61fa0264ececc510efdd5998f83dbf # v0.16.2
+      - uses: ship-iac/shipmate/actions/plan-cell@5f4a022cfbcee0fcc25960a7152997a2fdeeb1ff # v0.17.0
         with:
           stack: ${{ matrix.stack }}
           stack-name: ${{ matrix.stack }}
           env: ${{ matrix.environment }}
+          expected-head: ${{ github.event.pull_request.head.sha }}
           plan-passphrase: ${{ secrets.SHIPMATE_PLAN_PASSPHRASE }}
 
   # Everything trusted happens inside the engine's reusable workflow: one job,
@@ -82,7 +83,7 @@ jobs:
   summary:
     needs: [detect, plan]
     if: ${{ !cancelled() }}
-    uses: ship-iac/shipmate/.github/workflows/summary.yml@69da4e495a61fa0264ececc510efdd5998f83dbf # v0.16.2
+    uses: ship-iac/shipmate/.github/workflows/summary.yml@5f4a022cfbcee0fcc25960a7152997a2fdeeb1ff # v0.17.0
     permissions:
       contents: read
     secrets:
