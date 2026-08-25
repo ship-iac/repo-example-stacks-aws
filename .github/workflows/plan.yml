@@ -26,7 +26,7 @@ jobs:
         with:
           ref: ${{ github.event.pull_request.head.sha }}
           fetch-depth: 0
-      - uses: ship-iac/shipmate/actions/setup@468429a10e0c59ecd8092c8ff990286cf5a4584e # v0.18.0
+      - uses: ship-iac/shipmate/actions/setup@270c03b7ba970f40fe185b128f4888805f2f01a5 # v0.19.0
         with:
           terramate-version: ${{ vars.TERRAMATE_VERSION }}
           tofu-version: ${{ vars.TOFU_VERSION }}
@@ -35,7 +35,7 @@ jobs:
       - name: stale codegen check
         run: terramate generate --detailed-exit-code
       - id: matrix
-        uses: ship-iac/shipmate/actions/build-matrix@468429a10e0c59ecd8092c8ff990286cf5a4584e # v0.18.0
+        uses: ship-iac/shipmate/actions/build-matrix@270c03b7ba970f40fe185b128f4888805f2f01a5 # v0.19.0
         with:
           base-sha: ${{ github.event.pull_request.base.sha }}
           head-repo: ${{ github.event.pull_request.head.repo.full_name }}
@@ -60,7 +60,7 @@ jobs:
         with:
           ref: ${{ github.event.pull_request.head.sha }}
           fetch-depth: 0
-      - uses: ship-iac/shipmate/actions/setup@468429a10e0c59ecd8092c8ff990286cf5a4584e # v0.18.0
+      - uses: ship-iac/shipmate/actions/setup@270c03b7ba970f40fe185b128f4888805f2f01a5 # v0.19.0
         with:
           terramate-version: ${{ vars.TERRAMATE_VERSION }}
           tofu-version: ${{ vars.TOFU_VERSION }}
@@ -68,7 +68,7 @@ jobs:
         with:
           role-to-assume: ${{ vars.AWS_ROLE_ARN }}
           aws-region: ${{ vars.AWS_REGION }}
-      - uses: ship-iac/shipmate/actions/plan-cell@468429a10e0c59ecd8092c8ff990286cf5a4584e # v0.18.0
+      - uses: ship-iac/shipmate/actions/plan-cell@270c03b7ba970f40fe185b128f4888805f2f01a5 # v0.19.0
         with:
           stack: ${{ matrix.stack }}
           stack-name: ${{ matrix.stack }}
@@ -84,7 +84,7 @@ jobs:
   summary:
     needs: [detect, plan]
     if: ${{ !cancelled() }}
-    uses: ship-iac/shipmate/.github/workflows/summary.yml@468429a10e0c59ecd8092c8ff990286cf5a4584e # v0.18.0
+    uses: ship-iac/shipmate/.github/workflows/summary.yml@270c03b7ba970f40fe185b128f4888805f2f01a5 # v0.19.0
     permissions:
       contents: read
     secrets:
