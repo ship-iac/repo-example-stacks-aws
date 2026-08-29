@@ -6,10 +6,6 @@ on:
         description: Target environment (empty = bare `shipmate apply`, all non-explicit environments)
         required: false
         default: ''
-      mode:
-        description: apply (default) or unlock — unlock releases a stranded state lock instead of applying
-        required: false
-        default: apply
       ref:
         description: PR head SHA to apply
         required: false
@@ -26,20 +22,19 @@ permissions:
 jobs:
   targeted:
     if: ${{ inputs.environment != '' }}
-    uses: ship-iac/shipmate/.github/workflows/apply.yml@dbcc4c5e82bbb37a2e6027b1c9ecc3f62eafc65e # v0.20.0
+    uses: ship-iac/shipmate/.github/workflows/apply.yml@11b31b5c4980b5670fa5094bb8b50f639c564ca7 # v0.21.0
     permissions: { contents: read, checks: read, actions: read, id-token: write }
     secrets:
       SHIPMATE_APP_PRIVATE_KEY: ${{ secrets.SHIPMATE_APP_PRIVATE_KEY }}
       SHIPMATE_PLAN_PASSPHRASE: ${{ secrets.SHIPMATE_PLAN_PASSPHRASE }}
     with:
       environment: ${{ inputs.environment }}
-      mode: ${{ inputs.mode }}
       ref: ${{ inputs.ref }}
       pr_number: ${{ inputs.pr_number }}
       state_suffix: ""
   all:
     if: ${{ inputs.environment == '' }}
-    uses: ship-iac/shipmate/.github/workflows/apply-all.yml@dbcc4c5e82bbb37a2e6027b1c9ecc3f62eafc65e # v0.20.0
+    uses: ship-iac/shipmate/.github/workflows/apply-all.yml@11b31b5c4980b5670fa5094bb8b50f639c564ca7 # v0.21.0
     permissions: { contents: read, checks: read, actions: read, id-token: write }
     secrets:
       SHIPMATE_APP_PRIVATE_KEY: ${{ secrets.SHIPMATE_APP_PRIVATE_KEY }}
