@@ -36,7 +36,7 @@ jobs:
       on-demand: ${{ steps.facts.outputs.on-demand }}
     steps:
       - id: facts
-        uses: ship-iac/shipmate/actions/pr-facts@11b31b5c4980b5670fa5094bb8b50f639c564ca7 # v0.21.0
+        uses: ship-iac/shipmate/actions/pr-facts@cda2a93ac43b7a0ad52efcb0c390755e5bcb3915 # v0.22.0
 
   detect:
     name: shipmate / detect
@@ -61,7 +61,7 @@ jobs:
         with:
           ref: ${{ needs.facts.outputs.head-sha }}
           fetch-depth: 0
-      - uses: ship-iac/shipmate/actions/setup@11b31b5c4980b5670fa5094bb8b50f639c564ca7 # v0.21.0
+      - uses: ship-iac/shipmate/actions/setup@cda2a93ac43b7a0ad52efcb0c390755e5bcb3915 # v0.22.0
         with:
           terramate-version: ${{ vars.TERRAMATE_VERSION }}
           tofu-version: ${{ vars.TOFU_VERSION }}
@@ -71,7 +71,7 @@ jobs:
       # fork head itself, so the order only shows on the dispatch leg — which has
       # no pull-request context for that outer refusal to key on.
       - id: matrix
-        uses: ship-iac/shipmate/actions/build-matrix@11b31b5c4980b5670fa5094bb8b50f639c564ca7 # v0.21.0
+        uses: ship-iac/shipmate/actions/build-matrix@cda2a93ac43b7a0ad52efcb0c390755e5bcb3915 # v0.22.0
         with:
           base-sha: ${{ needs.facts.outputs.base-sha }}
           head-repo: ${{ needs.facts.outputs.head-repo }}
@@ -101,7 +101,7 @@ jobs:
         with:
           ref: ${{ needs.facts.outputs.head-sha }}
           fetch-depth: 0
-      - uses: ship-iac/shipmate/actions/setup@11b31b5c4980b5670fa5094bb8b50f639c564ca7 # v0.21.0
+      - uses: ship-iac/shipmate/actions/setup@cda2a93ac43b7a0ad52efcb0c390755e5bcb3915 # v0.22.0
         with:
           terramate-version: ${{ vars.TERRAMATE_VERSION }}
           tofu-version: ${{ vars.TOFU_VERSION }}
@@ -109,7 +109,7 @@ jobs:
         with:
           role-to-assume: ${{ vars.AWS_ROLE_ARN }}
           aws-region: ${{ vars.AWS_REGION }}
-      - uses: ship-iac/shipmate/actions/plan-cell@11b31b5c4980b5670fa5094bb8b50f639c564ca7 # v0.21.0
+      - uses: ship-iac/shipmate/actions/plan-cell@cda2a93ac43b7a0ad52efcb0c390755e5bcb3915 # v0.22.0
         with:
           stack: ${{ matrix.stack }}
           stack-name: ${{ matrix.stack }}
@@ -129,7 +129,7 @@ jobs:
   summary:
     needs: [facts, detect, plan]
     if: ${{ !cancelled() }}
-    uses: ship-iac/shipmate/.github/workflows/summary.yml@11b31b5c4980b5670fa5094bb8b50f639c564ca7 # v0.21.0
+    uses: ship-iac/shipmate/.github/workflows/summary.yml@cda2a93ac43b7a0ad52efcb0c390755e5bcb3915 # v0.22.0
     permissions:
       contents: read
     secrets:
