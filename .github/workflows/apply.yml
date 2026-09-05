@@ -22,7 +22,7 @@ permissions:
 jobs:
   targeted:
     if: ${{ inputs.environment != '' }}
-    uses: ship-iac/shipmate/.github/workflows/apply.yml@d780e60cfe41166e4a3330f274eacc7daa2d424e # v0.23.0
+    uses: ship-iac/shipmate/.github/workflows/apply.yml@9916735b5940d0d4911becae912d74acaffeee33 # v0.24.0
     permissions: { contents: read, checks: read, actions: read, id-token: write }
     secrets:
       SHIPMATE_APP_PRIVATE_KEY: ${{ secrets.SHIPMATE_APP_PRIVATE_KEY }}
@@ -34,7 +34,7 @@ jobs:
       state_suffix: ""
   all:
     if: ${{ inputs.environment == '' }}
-    uses: ship-iac/shipmate/.github/workflows/apply-all.yml@d780e60cfe41166e4a3330f274eacc7daa2d424e # v0.23.0
+    uses: ship-iac/shipmate/.github/workflows/apply-all.yml@9916735b5940d0d4911becae912d74acaffeee33 # v0.24.0
     permissions: { contents: read, checks: read, actions: read, id-token: write }
     secrets:
       SHIPMATE_APP_PRIVATE_KEY: ${{ secrets.SHIPMATE_APP_PRIVATE_KEY }}
