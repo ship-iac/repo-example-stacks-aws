@@ -16,7 +16,7 @@ permissions:
   id-token: write
 jobs:
   unlock:
-    uses: ship-iac/shipmate/.github/workflows/unlock.yml@cda2a93ac43b7a0ad52efcb0c390755e5bcb3915 # v0.22.0
+    uses: ship-iac/shipmate/.github/workflows/unlock.yml@71e1aa46df8f9727fb4c2795312348328b5f5aa7 # v0.22.1
     permissions: { contents: read, checks: read, actions: read, id-token: write }
     with:
       environment: ${{ inputs.environment }}
