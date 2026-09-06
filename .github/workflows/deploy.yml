@@ -15,7 +15,7 @@ jobs:
     # Display only: the run's job path reads
     # `shipmate · deploy / post-merge / L<n> / apply / <stack> / <env>`.
     name: post-merge
-    uses: ship-iac/shipmate/.github/workflows/deploy.yml@9e126104de5c11495b08a9d4e324daa6ce293551 # v0.25.0
+    uses: ship-iac/shipmate/.github/workflows/deploy.yml@c622ff75680fbf4def63887a759a37dded892ea2 # v0.26.0
     permissions: { contents: read, checks: read, pull-requests: read, actions: read, id-token: write }
     secrets:
       SHIPMATE_APP_PRIVATE_KEY: ${{ secrets.SHIPMATE_APP_PRIVATE_KEY }}

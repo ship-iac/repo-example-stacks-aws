@@ -19,7 +19,7 @@ jobs:
   # `shipmate / <stack> / <env>` — the names the plan comment's links resolve.
   shipmate:
     name: shipmate
-    uses: ship-iac/shipmate/.github/workflows/plan.yml@9e126104de5c11495b08a9d4e324daa6ce293551 # v0.25.0
+    uses: ship-iac/shipmate/.github/workflows/plan.yml@c622ff75680fbf4def63887a759a37dded892ea2 # v0.26.0
     # Not optional — a callee's permissions are capped by this job's, and granting less kills
     # the run at startup with no job and no log.
     permissions:
