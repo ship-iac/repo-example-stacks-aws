@@ -1,5 +1,5 @@
 globals {
-  version        = "13"
+  version        = "14"
   workload       = "platform"
   state_role_arn = "arn:aws:iam::981781037707:role/shipmate-state"
 }
