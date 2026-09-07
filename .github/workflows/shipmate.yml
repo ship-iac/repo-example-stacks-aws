@@ -1,0 +1,146 @@
+name: shipmate
+run-name: >-
+  shipmate · ${{ github.event_name == 'pull_request_target' && 'plan'
+  || github.event_name == 'issue_comment' && 'comment'
+  || github.event_name == 'push' && 'deploy'
+  || github.event_name == 'schedule' && 'drift'
+  || inputs.verb }}
+on:
+  pull_request_target:
+    types: [opened, synchronize, reopened, ready_for_review]
+  issue_comment:
+    types: [created]
+  push:
+    branches: [main]
+  schedule:
+    - cron: "17 3 * * *"   # nightly, off-peak
+  workflow_dispatch:
+    inputs:
+      # Every input is optional except the verb, and that is deliberate: one schema serves
+      # four verbs, and GitHub reads an empty value for a `required: true` input as not
+      # provided and answers HTTP 422 before the run starts. The engine validates instead —
+      # `pr-facts` refuses a plan with no number, `apply-detect` an apply with no ref.
+      verb:
+        description: What to run (plan, apply, unlock or drift)
+        type: choice
+        options: [plan, apply, unlock, drift]
+        required: true
+      environment:
+        description: Target environment (apply and unlock; empty apply = every non-explicit environment)
+        required: false
+        default: ''
+      ref:
+        description: PR head SHA (apply and unlock)
+        required: false
+        default: ''
+      pr_number:
+        description: Pull request number (plan and apply)
+        required: false
+        default: ''
+# Floor, not a default to inherit: every job below declares its own block, so a job that
+# loses one gets nothing rather than everything the file granted.
+permissions: {}
+jobs:
+  # `name: shipmate` is not decoration: GitHub names a called workflow's check runs
+  # `<caller job> / <callee job>`, so this is what makes the plan cells
+  # `shipmate / <stack> / <env>` — the names the plan comment's links resolve.
+  plan:
+    name: shipmate
+    # `github.event.inputs` is the form readable under either trigger, unlike the `inputs`
+    # context, and `plan` and `drift` also run under one that is not `workflow_dispatch`; the
+    # concurrency group below relies on the same thing. `targeted`, `all` and `unlock` are
+    # dispatch-only and keep `inputs.`, because only that form applies a declared default,
+    # which is what makes an omitted `environment` key read as the empty string.
+    if: github.event_name == 'pull_request_target' || (github.event_name == 'workflow_dispatch' && github.event.inputs.verb == 'plan')
+    concurrency:
+      # `github.event.inputs` is readable under either trigger, unlike the `inputs` context.
+      group: plan-${{ github.event.pull_request.number || github.event.inputs.pr_number }}
+      cancel-in-progress: true
+    uses: ship-iac/shipmate/.github/workflows/plan.yml@457ea2b752aa3bbde174b51dbd36ce2a39effaa5 # v0.27.0
+    # Not optional — a callee's permissions are capped by this job's, and granting less kills
+    # the run at startup with no job and no log.
+    permissions:
+      contents: read
+      pull-requests: read
+      id-token: write
+    secrets:
+      SHIPMATE_APP_PRIVATE_KEY: ${{ secrets.SHIPMATE_APP_PRIVATE_KEY }}
+      SHIPMATE_PLAN_PASSPHRASE: ${{ secrets.SHIPMATE_PLAN_PASSPHRASE }}
+    with:
+      # Your flavor's per-stack state path suffix; "" when a remote backend owns state.
+      state_suffix: ""
+  comment-ops:
+    name: shipmate
+    # `issue_comment` fires on issues too; the engine's own `ops` job carries that filter, so
+    # this one only has to select the event.
+    if: github.event_name == 'issue_comment'
+    concurrency:
+      group: comment-ops-${{ github.event.issue.number }}
+      cancel-in-progress: false
+    uses: ship-iac/shipmate/.github/workflows/comment-ops.yml@457ea2b752aa3bbde174b51dbd36ce2a39effaa5 # v0.27.0
+    permissions:
+      contents: read
+      issues: write
+      pull-requests: write
+      actions: read
+    secrets:
+      SHIPMATE_APP_PRIVATE_KEY: ${{ secrets.SHIPMATE_APP_PRIVATE_KEY }}
+  deploy:
+    # Display only: the run's job path reads
+    # `shipmate / post-merge / L<n> / apply / <stack> / <env>`.
+    name: post-merge
+    if: github.event_name == 'push'
+    concurrency:
+      group: deploy-main
+      cancel-in-progress: false
+    uses: ship-iac/shipmate/.github/workflows/deploy.yml@457ea2b752aa3bbde174b51dbd36ce2a39effaa5 # v0.27.0
+    permissions: { contents: read, checks: read, pull-requests: read, actions: read, id-token: write }
+    secrets:
+      SHIPMATE_APP_PRIVATE_KEY: ${{ secrets.SHIPMATE_APP_PRIVATE_KEY }}
+      SHIPMATE_PLAN_PASSPHRASE: ${{ secrets.SHIPMATE_PLAN_PASSPHRASE }}
+    with:
+      state_suffix: ""
+  drift:
+    name: shipmate
+    if: github.event_name == 'schedule' || (github.event_name == 'workflow_dispatch' && github.event.inputs.verb == 'drift')
+    uses: ship-iac/shipmate/.github/workflows/drift.yml@457ea2b752aa3bbde174b51dbd36ce2a39effaa5 # v0.27.0
+    permissions:
+      contents: read
+      id-token: write
+      actions: read
+    secrets:
+      SHIPMATE_APP_PRIVATE_KEY: ${{ secrets.SHIPMATE_APP_PRIVATE_KEY }}
+    with:
+      state_suffix: ""
+      # Empty covers every cell. Split the sweep by adding more files, one tag query each.
+      tags: ""
+  targeted:
+    if: github.event_name == 'workflow_dispatch' && inputs.verb == 'apply' && inputs.environment != ''
+    uses: ship-iac/shipmate/.github/workflows/apply.yml@457ea2b752aa3bbde174b51dbd36ce2a39effaa5 # v0.27.0
+    permissions: { contents: read, checks: read, actions: read, id-token: write }
+    secrets:
+      SHIPMATE_APP_PRIVATE_KEY: ${{ secrets.SHIPMATE_APP_PRIVATE_KEY }}
+      SHIPMATE_PLAN_PASSPHRASE: ${{ secrets.SHIPMATE_PLAN_PASSPHRASE }}
+    with:
+      environment: ${{ inputs.environment }}
+      ref: ${{ inputs.ref }}
+      pr_number: ${{ inputs.pr_number }}
+      state_suffix: ""
+  all:
+    if: github.event_name == 'workflow_dispatch' && inputs.verb == 'apply' && inputs.environment == ''
+    uses: ship-iac/shipmate/.github/workflows/apply-all.yml@457ea2b752aa3bbde174b51dbd36ce2a39effaa5 # v0.27.0
+    permissions: { contents: read, checks: read, actions: read, id-token: write }
+    secrets:
+      SHIPMATE_APP_PRIVATE_KEY: ${{ secrets.SHIPMATE_APP_PRIVATE_KEY }}
+      SHIPMATE_PLAN_PASSPHRASE: ${{ secrets.SHIPMATE_PLAN_PASSPHRASE }}
+    with:
+      ref: ${{ inputs.ref }}
+      pr_number: ${{ inputs.pr_number }}
+      state_suffix: ""
+  unlock:
+    if: github.event_name == 'workflow_dispatch' && inputs.verb == 'unlock'
+    uses: ship-iac/shipmate/.github/workflows/unlock.yml@457ea2b752aa3bbde174b51dbd36ce2a39effaa5 # v0.27.0
+    permissions: { contents: read, checks: read, actions: read, id-token: write }
+    with:
+      environment: ${{ inputs.environment }}
+      ref: ${{ inputs.ref }}
