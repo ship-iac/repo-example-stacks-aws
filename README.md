@@ -80,7 +80,7 @@ Expect `tofu plan` to show 2 resources to add (`random_pet.this`,
 ```
 repo-example-stacks-aws/
 ├── terramate.tm.hcl      # project root marker
-├── env-order.tm.hcl      # cross-environment apply order
+├── shipmate.tm.hcl       # environment table: layout, regions, roles, apply order
 ├── tools/
 │   └── mutate-state.ps1  # drift fixture helper
 ├── root.tm.hcl           # shared globals + generate_hcl blocks,
