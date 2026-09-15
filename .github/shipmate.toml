@@ -1,0 +1,27 @@
+# Dynamic backend: the layout derives `TF_VAR_env` from each environment's own name
+# and `TF_VAR_region` from its `region`. Under `dry` every environment in the matrix
+# needs an entry with a non-empty region, or the run refuses at detect.
+layout = "dry"
+
+[env_order]
+dev-us = ["dev-eu"]
+
+# The environment's own `region` inherits into the provider block, so the credentials
+# step gets the same region the stack does. `plan` and `apply` are separate roles: the
+# plan role is read-only and reachable from any branch, the apply role is not. Do not
+# collapse them into one block-level `aws.role` -- that hands any-branch plan cells the
+# apply role's permissions.
+[environments.dev-eu]
+region = "eu-west-1"
+aws.plan.role = "arn:aws:iam::981781037707:role/shipmate-plan"
+aws.apply.role = "arn:aws:iam::981781037707:role/shipmate-apply"
+
+[environments.dev-us]
+region = "us-east-1"
+aws.plan.role = "arn:aws:iam::981781037707:role/shipmate-plan"
+aws.apply.role = "arn:aws:iam::981781037707:role/shipmate-apply"
+
+[environments.sbx]
+region = "eu-west-1"
+aws.plan.role = "arn:aws:iam::981781037707:role/sbx"
+aws.apply.role = "arn:aws:iam::981781037707:role/sbx-apply"
