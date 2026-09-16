@@ -1,20 +1,18 @@
-# Dynamic backend: the layout derives `TF_VAR_env` from each environment's own name
-# and `TF_VAR_region` from its `region`. Under `dry` every environment in the matrix
-# needs an entry with a non-empty region, or the run refuses at detect.
+# ACCEPTANCE FIXTURE, not a working configuration. This branch changes roles,
+# ordering and exclusions at once so a plan run can demonstrate that execution
+# resolves the DEFAULT branch's values and ignores this file. The dev-eu role
+# below does not exist: if a cell ever assumed it, the credentials step would
+# fail rather than quietly succeed.
 layout = "dry"
+explicit_envs = ["sbx"]
 
 [env_order]
-dev-us = ["dev-eu"]
+dev-eu = ["dev-us"]
 
-# The environment's own `region` inherits into the provider block, so the credentials
-# step gets the same region the stack does. `plan` and `apply` are separate roles: the
-# plan role is read-only and reachable from any branch, the apply role is not. Do not
-# collapse them into one block-level `aws.role` -- that hands any-branch plan cells the
-# apply role's permissions.
 [environments.dev-eu]
 region = "eu-west-1"
-aws.plan.role = "arn:aws:iam::981781037707:role/shipmate-plan"
-aws.apply.role = "arn:aws:iam::981781037707:role/shipmate-apply"
+aws.plan.role = "arn:aws:iam::981781037707:role/branch-must-not-be-used"
+aws.apply.role = "arn:aws:iam::981781037707:role/branch-must-not-be-used"
 
 [environments.dev-us]
 region = "us-east-1"
