@@ -2,6 +2,15 @@
 # and `TF_VAR_region` from its `region`. Under `dry` every environment in the matrix
 # needs an entry with a non-empty region, or the run refuses at detect.
 layout = "dry"
+version = 1
+
+# Who may drive shipmate by pull-request comment, and which environments a targeted
+# apply may reach without an approving review. Both were repository variables until
+# the engine learned to read them here; `dev-us` is ungated because it is a dev
+# environment, `dev-eu` is not, so an apply there still waits for a review.
+[gate]
+approvers_team = "deployers"
+ungated_envs = ["dev-us"]
 
 [env_order]
 dev-us = ["dev-eu"]
