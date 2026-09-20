@@ -4,4 +4,5 @@
 *.otplan
 fingerprint.txt
 planned-head.txt
+.shipmate-engine/
 .idea/
