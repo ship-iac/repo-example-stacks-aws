@@ -1,13 +1,6 @@
 # Throwaway acceptance probe for consumer variables and secrets reaching a cell.
 # Removed on the same pull request before it closes; never merged.
-terraform {
-  required_providers {
-    external = {
-      source  = "hashicorp/external"
-      version = "= 2.3.5"
-    }
-  }
-}
+# hashicorp/external resolves implicitly: the generated _providers.tf owns required_providers.
 
 # Repository variable TF_VAR_PROBE_CONFIG, lowercased on export.
 variable "probe_config" {
