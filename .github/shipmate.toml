@@ -20,17 +20,19 @@ dev-us = ["dev-eu"]
 # plan role is read-only and reachable from any branch, the apply role is not. Do not
 # collapse them into one block-level `aws.role` -- that hands any-branch plan cells the
 # apply role's permissions.
+# Each role is a repository variable, resolved at detect, so a rename is a variable edit
+# rather than a pull request. The ARNs stay public in the credentials step's log.
 [environments.dev-eu]
 region = "eu-west-1"
-aws.plan.role = "arn:aws:iam::981781037707:role/shipmate-plan"
-aws.apply.role = "arn:aws:iam::981781037707:role/shipmate-apply"
+aws.plan.role = { var = "DEV_PLAN_ROLE" }
+aws.apply.role = { var = "DEV_APPLY_ROLE" }
 
 [environments.dev-us]
 region = "us-east-1"
-aws.plan.role = "arn:aws:iam::981781037707:role/shipmate-plan"
-aws.apply.role = "arn:aws:iam::981781037707:role/shipmate-apply"
+aws.plan.role = { var = "DEV_PLAN_ROLE" }
+aws.apply.role = { var = "DEV_APPLY_ROLE" }
 
 [environments.sbx]
 region = "eu-west-1"
-aws.plan.role = "arn:aws:iam::981781037707:role/sbx"
-aws.apply.role = "arn:aws:iam::981781037707:role/sbx-apply"
+aws.plan.role = { var = "SBX_PLAN_ROLE" }
+aws.apply.role = { var = "SBX_APPLY_ROLE" }
