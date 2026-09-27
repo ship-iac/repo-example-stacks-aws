@@ -1,19 +1,14 @@
+schema_version = 1
+
 # Dynamic backend: the layout derives `TF_VAR_env` from each environment's own name
-# and `TF_VAR_region` from its `region`. Under `dry` every environment in the matrix
+# and `TF_VAR_region` from its `region`. Under `tf_vars` every environment in the matrix
 # needs an entry with a non-empty region, or the run refuses at detect.
-layout = "dry"
-version = 1
+layout = "tf_vars"
 
-# Who may drive shipmate by pull-request comment, and which environments a targeted
-# apply may reach without an approving review. Both were repository variables until
-# the engine learned to read them here; `dev-us` is ungated because it is a dev
-# environment, `dev-eu` is not, so an apply there still waits for a review.
+# Who may drive shipmate by pull-request comment. Every repository declares its own
+# team: the engine reads this file and no repository variable.
 [gate]
-approvers_team = "deployers"
-ungated_envs = ["dev-us"]
-
-[env_order]
-dev-us = ["dev-eu"]
+approver_team = "deployers"
 
 # The environment's own `region` inherits into the provider block, so the credentials
 # step gets the same region the stack does. `plan` and `apply` are separate roles: the
@@ -24,15 +19,19 @@ dev-us = ["dev-eu"]
 # rather than a pull request. The ARNs stay public in the credentials step's log.
 [environments.dev-eu]
 region = "eu-west-1"
-aws.plan.role = { var = "DEV_PLAN_ROLE" }
-aws.apply.role = { var = "DEV_APPLY_ROLE" }
+aws.plan.role = { vars = "DEV_PLAN_ROLE" }
+aws.apply.role = { vars = "DEV_APPLY_ROLE" }
 
+# dev-eu fully applies first. dev-us is a dev environment, so a targeted apply there
+# needs no approving review; dev-eu's still does.
 [environments.dev-us]
 region = "us-east-1"
-aws.plan.role = { var = "DEV_PLAN_ROLE" }
-aws.apply.role = { var = "DEV_APPLY_ROLE" }
+needs = ["dev-eu"]
+gated = false
+aws.plan.role = { vars = "DEV_PLAN_ROLE" }
+aws.apply.role = { vars = "DEV_APPLY_ROLE" }
 
 [environments.sbx]
 region = "eu-west-1"
-aws.plan.role = { var = "SBX_PLAN_ROLE" }
-aws.apply.role = { var = "SBX_APPLY_ROLE" }
+aws.plan.role = { vars = "SBX_PLAN_ROLE" }
+aws.apply.role = { vars = "SBX_APPLY_ROLE" }
