@@ -19,19 +19,21 @@ footprint.
 
 This is the **DRY / dynamic-backend** layout: one stack directory is applied
 N times, once per environment, distinguished only by the `TF_VAR_env` /
-`TF_VAR_region` injected by each GitHub Environment. (Sibling repos
+`TF_VAR_region` the `tf_vars` layout derives from each environment's entry in
+`.github/shipmate.toml`. (Sibling repos
 `repo-example-folders` and `repo-example-workspaces` prove the same engine
 against the folder-per-env and workspace-per-env layouts.)
 
 ## What this repo tests
 
-The engine ships three workflows (pinned by commit SHA in
-`.github/workflows/`):
+`.github/workflows/shipmate.yml` pins every engine workflow it calls by commit
+SHA. Four of them run on their own trigger:
 
 | Workflow | Trigger | What it does |
 |----------|---------|--------------|
 | `plan.yml` | pull request | fan out one plan per stack × env, publish plan artifacts, create a pending apply check per cell, gate on `shipmate / gate` |
 | `deploy.yml` | push to `main` | apply the reviewed plans in **waves** (topological levels of the `after` DAG) |
+| `comment-ops.yml` | pull-request comment | run `shipmate plan`, `apply`, `unlock` or `doctor`, dispatching `apply.yml` or `unlock.yml` |
 | `drift.yml` | schedule | plan every stack × env and open/update/close a drift issue |
 
 The stacks, tags, and DAG below are the fixture those workflows run against.
@@ -80,7 +82,10 @@ Expect `tofu plan` to show 2 resources to add (`random_pet.this`,
 ```
 repo-example-stacks-aws/
 ├── terramate.tm.hcl      # project root marker
-├── shipmate.tm.hcl       # environment table: layout, regions, roles, apply order
+├── .github/shipmate.toml # environment table: layout, regions, identities, apply order
+├── .github/workflows/
+│   ├── shipmate.yml      # calls every engine workflow, SHA-pinned
+│   └── test-approve.yml  # bot-approval harness for tests
 ├── tools/
 │   └── mutate-state.ps1  # drift fixture helper
 ├── root.tm.hcl           # shared globals + generate_hcl blocks,
@@ -167,8 +172,8 @@ Nothing in a stack's generated code hardcodes an environment or region.
 - `_providers.tf` configuring the AWS provider for `var.region`, and `_main.tf`
   an `aws_ssm_parameter` named after the env and stack.
 
-In CI the values come from each GitHub Environment (`TF_VAR_env`,
-`TF_VAR_region`). By hand you export them:
+In CI the `tf_vars` layout derives `TF_VAR_env` and `TF_VAR_region` from each
+environment's entry in `.github/shipmate.toml`. By hand you export them:
 
 | Stack        | Example invocation |
 |--------------|--------------------|

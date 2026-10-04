@@ -1,37 +1,33 @@
-schema_version = 1
-
 # Dynamic backend: the layout derives `TF_VAR_env` from each environment's own name
 # and `TF_VAR_region` from its `region`. Under `tf_vars` every environment in the matrix
 # needs an entry with a non-empty region, or the run refuses at detect.
 layout = "tf_vars"
 
-# Who may drive shipmate by pull-request comment. Every repository declares its own
-# team: the engine reads this file and no repository variable.
-[gate]
-approver_team = "deployers"
+# `plan` and `apply` are separate roles: the plan role is read-only and reachable from
+# any branch, the apply role is not. Each role is a repository variable holding a full
+# ARN, resolved at detect, so a rename is a variable edit rather than a pull request.
+# The ARNs stay public in the credentials step's log. Do not set `shared = true` here: a
+# shared environment reads `aws.apply` on both paths, handing any-branch plan cells the apply role.
+[identities.dev]
+aws.plan = { vars = "DEV_PLAN_ROLE" }
+aws.apply = { vars = "DEV_APPLY_ROLE" }
 
-# The environment's own `region` inherits into the provider block, so the credentials
-# step gets the same region the stack does. `plan` and `apply` are separate roles: the
-# plan role is read-only and reachable from any branch, the apply role is not. Do not
-# collapse them into one block-level `aws.role` -- that hands any-branch plan cells the
-# apply role's permissions.
-# Each role is a repository variable, resolved at detect, so a rename is a variable edit
-# rather than a pull request. The ARNs stay public in the credentials step's log.
+[identities.sbx]
+aws.plan = { vars = "SBX_PLAN_ROLE" }
+aws.apply = { vars = "SBX_APPLY_ROLE" }
+
 [environments.dev-eu]
 region = "eu-west-1"
-aws.plan.role = { vars = "DEV_PLAN_ROLE" }
-aws.apply.role = { vars = "DEV_APPLY_ROLE" }
+identity = "dev"
 
-# dev-eu fully applies first. dev-us is a dev environment, so a targeted apply there
-# needs no approving review; dev-eu's still does.
+# dev-eu fully applies first. `gated = false`: any apply, targeted or bare, reaches dev-us
+# without an approving review; dev-eu and sbx still need one.
 [environments.dev-us]
 region = "us-east-1"
+identity = "dev"
 needs = ["dev-eu"]
 gated = false
-aws.plan.role = { vars = "DEV_PLAN_ROLE" }
-aws.apply.role = { vars = "DEV_APPLY_ROLE" }
 
 [environments.sbx]
 region = "eu-west-1"
-aws.plan.role = { vars = "SBX_PLAN_ROLE" }
-aws.apply.role = { vars = "SBX_APPLY_ROLE" }
+identity = "sbx"
