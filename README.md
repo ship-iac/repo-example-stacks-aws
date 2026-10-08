@@ -26,15 +26,15 @@ against the folder-per-env and workspace-per-env layouts.)
 
 ## What this repo tests
 
-`.github/workflows/shipmate.yml` pins every engine workflow it calls by commit
-SHA. Four of them run on their own trigger:
+`.github/workflows/shipmate.yml` and `.github/workflows/shipmate-drift.yml` pin every
+engine workflow they call by commit SHA. Four of them run on their own trigger:
 
 | Workflow | Trigger | What it does |
 |----------|---------|--------------|
 | `plan.yml` | pull request | fan out one plan per stack × env, publish plan artifacts, create a pending apply check per cell, gate on `shipmate / gate` |
 | `deploy.yml` | push to `main` | apply the reviewed plans in **waves** (topological levels of the `after` DAG) |
 | `comment-ops.yml` | pull-request comment | run `shipmate plan`, `apply`, `unlock` or `doctor`, dispatching `apply.yml` or `unlock.yml` |
-| `drift.yml` | schedule | plan every stack × env and open/update/close a drift issue |
+| `drift.yml` | schedule in `shipmate-drift.yml` | plan every stack × env and open/update/close a drift issue |
 
 The stacks, tags, and DAG below are the fixture those workflows run against.
 
@@ -84,7 +84,8 @@ repo-example-stacks-aws/
 ├── terramate.tm.hcl      # project root marker
 ├── .github/shipmate.toml # environment table: layout, regions, identities, apply order
 ├── .github/workflows/
-│   ├── shipmate.yml      # calls every engine workflow, SHA-pinned
+│   ├── shipmate.yml      # plan, comment ops, deploy, apply, unlock; SHA-pinned
+│   ├── shipmate-drift.yml # the drift sweep, SHA-pinned
 │   └── test-approve.yml  # bot-approval harness for tests
 ├── tools/
 │   └── mutate-state.ps1  # drift fixture helper
