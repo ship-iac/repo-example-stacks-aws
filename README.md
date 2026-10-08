@@ -26,15 +26,17 @@ against the folder-per-env and workspace-per-env layouts.)
 
 ## What this repo tests
 
-`.github/workflows/shipmate.yml` pins every engine workflow it calls by commit
-SHA. Four of them run on their own trigger:
+`.github/workflows/shipmate.yml` and `.github/workflows/shipmate-drift.yml` pin every
+engine workflow they call by commit SHA. Four of them run on their own trigger:
 
 | Workflow | Trigger | What it does |
 |----------|---------|--------------|
 | `plan.yml` | pull request | fan out one plan per stack × env, publish plan artifacts, create a pending apply check per cell, gate on `shipmate / gate` |
 | `deploy.yml` | push to `main` | apply the reviewed plans in **waves** (topological levels of the `after` DAG) |
 | `comment-ops.yml` | pull-request comment | run `shipmate plan`, `apply`, `unlock` or `doctor`, dispatching `apply.yml` or `unlock.yml` |
-| `drift.yml` | schedule | plan every stack × env and open/update/close a drift issue |
+| `drift.yml` | schedule in `shipmate-drift.yml` | plan every stack × env and open/update/close a drift issue |
+
+Run a drift sweep by hand with `gh workflow run shipmate-drift.yml`.
 
 The stacks, tags, and DAG below are the fixture those workflows run against.
 
@@ -84,10 +86,9 @@ repo-example-stacks-aws/
 ├── terramate.tm.hcl      # project root marker
 ├── .github/shipmate.toml # environment table: layout, regions, identities, apply order
 ├── .github/workflows/
-│   ├── shipmate.yml      # calls every engine workflow, SHA-pinned
+│   ├── shipmate.yml      # plan, comment ops, deploy, apply, unlock; SHA-pinned
+│   ├── shipmate-drift.yml # drift sweep, SHA-pinned
 │   └── test-approve.yml  # bot-approval harness for tests
-├── tools/
-│   └── mutate-state.ps1  # drift fixture helper
 ├── root.tm.hcl           # shared globals + generate_hcl blocks,
 │                         # inherited by every stack beside it
 ├── dns/                  # env/dev-us
@@ -336,13 +337,11 @@ fixture is enabled`, exit code 1. Unset with `unset TF_VAR_fail_precondition`.
 ### 2. Drift
 
 Requires the stack applied at least once (`tofu apply -input=false
--auto-approve`). `tools/mutate-state.ps1` deletes the `random_pet` resource
-straight out of local state, bypassing OpenTofu, so the next plan reports real
-drift. It's a PowerShell helper (drift is normally injected out-of-band); on
-Linux run it via `pwsh`:
+-auto-approve`). Removing the `random_pet` resource from state makes the next
+plan report drift:
 
 ```bash
-pwsh tools/mutate-state.ps1 -StateFile ".state/dev-us/us-east-1/terraform.tfstate"
+tofu state rm random_pet.this
 tofu plan -input=false -detailed-exitcode
 ```
 

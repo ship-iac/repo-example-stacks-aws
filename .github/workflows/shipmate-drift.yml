@@ -1,0 +1,17 @@
+name: shipmate drift
+on:
+  schedule:
+    - cron: "17 3 * * *"   # nightly, off-peak
+  workflow_dispatch:
+permissions: {}
+jobs:
+  drift:
+    name: shipmate
+    uses: ship-iac/shipmate/.github/workflows/drift.yml@ce6faacb3f6fead420a6425174232f48a1ab676c # v0.43.0
+    permissions:
+      contents: read
+      id-token: write
+      actions: read
+    secrets:
+      SHIPMATE_APP_PRIVATE_KEY: ${{ secrets.SHIPMATE_APP_PRIVATE_KEY }}
+      SHIPMATE_SECRETS: ${{ secrets.SHIPMATE_SECRETS }}
