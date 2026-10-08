@@ -1,5 +1,5 @@
 globals {
   workload       = "sandbox"
   state_role_arn = ""
-  version        = "15"
+  version        = "16"
 }
