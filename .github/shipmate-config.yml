@@ -1,0 +1,36 @@
+# Dynamic backend: the layout derives `TF_VAR_env` from each environment's own name
+# and `TF_VAR_region` from its `region`. Under `tf_vars` every environment in the matrix
+# needs an entry with a non-empty region, or the run refuses at detect.
+layout: tf_vars
+
+# `plan` and `apply` are separate roles: the plan role is read-only and reachable from
+# any branch, the apply role is not. Each role is a repository variable holding a full
+# ARN, resolved at detect, so a rename is a variable edit rather than a pull request.
+# The ARNs stay public in the credentials step's log. Do not set `shared: true` here: a
+# shared environment reads `aws.apply` on both paths, handing any-branch plan cells the apply role.
+identities:
+  dev:
+    aws:
+      plan: {vars: DEV_PLAN_ROLE}
+      apply: {vars: DEV_APPLY_ROLE}
+  sbx:
+    aws:
+      plan: {vars: SBX_PLAN_ROLE}
+      apply: {vars: SBX_APPLY_ROLE}
+
+environments:
+  dev-eu:
+    region: eu-west-1
+    identity: dev
+
+  # dev-eu fully applies first. `gated: false`: any apply, targeted or bare, reaches dev-us
+  # without an approving review; dev-eu and sbx still need one.
+  dev-us:
+    region: us-east-1
+    identity: dev
+    needs: [dev-eu]
+    gated: false
+
+  sbx:
+    region: eu-west-1
+    identity: sbx
