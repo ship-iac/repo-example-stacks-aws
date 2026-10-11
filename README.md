@@ -20,7 +20,7 @@ footprint.
 This is the **DRY / dynamic-backend** layout: one stack directory is applied
 N times, once per environment, distinguished only by the `TF_VAR_env` /
 `TF_VAR_region` the `tf_vars` layout derives from each environment's entry in
-`.github/shipmate.toml`. (Sibling repos
+`.github/shipmate-config.yml`. (Sibling repos
 `repo-example-folders` and `repo-example-workspaces` prove the same engine
 against the folder-per-env and workspace-per-env layouts.)
 
@@ -84,7 +84,7 @@ Expect `tofu plan` to show 2 resources to add (`random_pet.this`,
 ```
 repo-example-stacks-aws/
 ├── terramate.tm.hcl      # project root marker
-├── .github/shipmate.toml # environment table: layout, regions, identities, apply order
+├── .github/shipmate-config.yml # environment table: layout, regions, identities, apply order
 ├── .github/workflows/
 │   ├── shipmate.yml      # plan, comment ops, deploy, apply, unlock; SHA-pinned
 │   ├── shipmate-drift.yml # drift sweep, SHA-pinned
@@ -174,7 +174,7 @@ Nothing in a stack's generated code hardcodes an environment or region.
   an `aws_ssm_parameter` named after the env and stack.
 
 In CI the `tf_vars` layout derives `TF_VAR_env` and `TF_VAR_region` from each
-environment's entry in `.github/shipmate.toml`. By hand you export them:
+environment's entry in `.github/shipmate-config.yml`. By hand you export them:
 
 | Stack        | Example invocation |
 |--------------|--------------------|
