@@ -23,14 +23,15 @@ environments:
     region: eu-west-1
     identity: dev
 
-  # dev-eu fully applies first. `gated: false`: any apply, targeted or bare, reaches dev-us
-  # without an approving review; dev-eu and sbx still need one.
+  # `gated: false`: any apply, targeted or bare, reaches dev-us without an approving
+  # review; dev-eu and sbx still need one.
   dev-us:
     region: us-east-1
     identity: dev
-    needs: [dev-eu]
     gated: false
 
+  # dev-eu fully applies first.
   sbx:
     region: eu-west-1
     identity: sbx
+    needs: [dev-eu]
