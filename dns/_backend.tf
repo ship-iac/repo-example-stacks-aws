@@ -13,3 +13,5 @@ terraform {
     use_lockfile = true
   }
 }
+
+# v0.46.0 smoke
