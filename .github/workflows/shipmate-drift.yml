@@ -7,7 +7,7 @@ permissions: {}
 jobs:
   drift:
     name: shipmate
-    uses: ship-iac/shipmate/.github/workflows/drift.yml@ec6aea5ede60886b00f0b5da5058e80d642a4d2d # v0.46.0
+    uses: ship-iac/shipmate/.github/workflows/drift.yml@00fa6affdda81f77969b0db8e87bd84d2d700dbe # v0.47.0
     permissions:
       contents: read
       id-token: write
