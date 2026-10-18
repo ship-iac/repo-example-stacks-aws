@@ -7,7 +7,7 @@ permissions: {}
 jobs:
   drift:
     name: shipmate
-    uses: ship-iac/shipmate/.github/workflows/drift.yml@73caa27536f22d3a662f9906a8a6a426f8f7a849 # v0.47.1
+    uses: ship-iac/shipmate/.github/workflows/drift.yml@b60c37697d455fbc0127e6acb84bc2936051dff8 # v0.48.0
     permissions:
       contents: read
       id-token: write
@@ -16,3 +16,5 @@ jobs:
       SHIPMATE_APP_PRIVATE_KEY: ${{ secrets.SHIPMATE_APP_PRIVATE_KEY }}
       SHIPMATE_PLAN_PASSPHRASE: ${{ secrets.SHIPMATE_PLAN_PASSPHRASE }}
       SHIPMATE_SECRETS: ${{ secrets.SHIPMATE_SECRETS }}
+    with:
+      runs_on: ubuntu-26.04-arm
