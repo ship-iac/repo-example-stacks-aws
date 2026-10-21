@@ -43,7 +43,7 @@ The stacks, tags, and DAG below are the fixture those workflows run against.
 ## Toolchain
 
 - Terramate 0.17.1
-- OpenTofu 1.12.4
+- OpenTofu 1.13.1
 
 ## Quickstart
 

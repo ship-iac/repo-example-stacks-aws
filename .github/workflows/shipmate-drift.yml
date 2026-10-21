@@ -6,15 +6,15 @@ on:
 permissions: {}
 jobs:
   drift:
-    name: shipmate
-    uses: ship-iac/shipmate/.github/workflows/drift.yml@7b525129e2c3677d41c4a8430da8d7f391b693e3 # v0.49.1
+    name: sweep
+    uses: ship-iac/shipmate/.github/workflows/drift.yml@5e8bde11e5f82ce6b2426d38eba5aa2160b1319f # v0.50.0
     permissions:
       contents: read
       id-token: write
       actions: read
     secrets:
       SHIPMATE_APP_PRIVATE_KEY: ${{ secrets.SHIPMATE_APP_PRIVATE_KEY }}
-      SHIPMATE_PLAN_PASSPHRASE: ${{ secrets.SHIPMATE_PLAN_PASSPHRASE }}
+      SHIPMATE_ENCRYPTION_KEY: ${{ secrets.SHIPMATE_ENCRYPTION_KEY }}
       SHIPMATE_SECRETS: ${{ secrets.SHIPMATE_SECRETS }}
     with:
       runs_on: ubuntu-26.04-arm
