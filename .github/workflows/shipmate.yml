@@ -45,8 +45,9 @@ jobs:
     if: github.event_name == 'pull_request_target' || (github.event_name == 'workflow_dispatch' && github.event.inputs.verb == 'plan')
     concurrency:
       group: plan-${{ github.event.pull_request.number || github.event.inputs.pr_number }}
-      cancel-in-progress: true
-    uses: ship-iac/shipmate/.github/workflows/plan.yml@5e8bde11e5f82ce6b2426d38eba5aa2160b1319f # v0.50.0
+      # A ready run waits for the run in flight instead of cancelling it.
+      cancel-in-progress: ${{ github.event.action != 'ready_for_review' }}
+    uses: ship-iac/shipmate/.github/workflows/plan.yml@7d46d732fd4cc94209d7599d92bbbe9dd9e2c103 # v0.51.0
     # Required: the callee is capped by these; fewer kills the run with no log.
     permissions:
       contents: read
@@ -66,7 +67,7 @@ jobs:
     name: comment
     # The engine drops comments on issues; this only selects the event.
     if: github.event_name == 'issue_comment'
-    uses: ship-iac/shipmate/.github/workflows/comment-ops.yml@5e8bde11e5f82ce6b2426d38eba5aa2160b1319f # v0.50.0
+    uses: ship-iac/shipmate/.github/workflows/comment-ops.yml@7d46d732fd4cc94209d7599d92bbbe9dd9e2c103 # v0.51.0
     permissions:
       contents: read
       issues: write
@@ -83,14 +84,14 @@ jobs:
     concurrency:
       group: deploy-main
       cancel-in-progress: false
-    uses: ship-iac/shipmate/.github/workflows/deploy.yml@5e8bde11e5f82ce6b2426d38eba5aa2160b1319f # v0.50.0
+    uses: ship-iac/shipmate/.github/workflows/deploy.yml@7d46d732fd4cc94209d7599d92bbbe9dd9e2c103 # v0.51.0
     permissions: { contents: read, checks: read, pull-requests: read, actions: read, id-token: write }
     secrets: *engine-secrets
     with:
       runs_on: *runner
   apply:
     if: github.event_name == 'workflow_dispatch' && inputs.verb == 'apply'
-    uses: ship-iac/shipmate/.github/workflows/apply.yml@5e8bde11e5f82ce6b2426d38eba5aa2160b1319f # v0.50.0
+    uses: ship-iac/shipmate/.github/workflows/apply.yml@7d46d732fd4cc94209d7599d92bbbe9dd9e2c103 # v0.51.0
     permissions: { contents: read, checks: read, actions: read, id-token: write }
     secrets: *engine-secrets
     with:
@@ -100,7 +101,7 @@ jobs:
       runs_on: *runner
   unlock:
     if: github.event_name == 'workflow_dispatch' && inputs.verb == 'unlock'
-    uses: ship-iac/shipmate/.github/workflows/unlock.yml@5e8bde11e5f82ce6b2426d38eba5aa2160b1319f # v0.50.0
+    uses: ship-iac/shipmate/.github/workflows/unlock.yml@7d46d732fd4cc94209d7599d92bbbe9dd9e2c103 # v0.51.0
     permissions: { contents: read, checks: read, actions: read, id-token: write }
     secrets:
       SHIPMATE_SECRETS: ${{ secrets.SHIPMATE_SECRETS }}
