@@ -6,8 +6,8 @@ layout: tf_vars
 # `plan` and `apply` are separate roles: the plan role is read-only and reachable from
 # any branch, the apply role is not. Each role is a repository variable holding a full
 # ARN, resolved at detect, so a rename is a variable edit rather than a pull request.
-# The ARNs stay public in the credentials step's log. Do not set `shared: true` here: a
-# shared environment reads `aws.apply` on both paths, handing any-branch plan cells the apply role.
+# The ARNs stay public in the credentials step's log. Do not set `split: false` here: an
+# unsplit environment reads `aws.apply` on both paths, handing any-branch plan cells the apply role.
 identities:
   dev:
     aws:
@@ -23,12 +23,12 @@ environments:
     region: eu-west-1
     identity: dev
 
-  # `gated: false`: any apply, targeted or bare, reaches dev-us without an approving
+  # `review: false`: any apply, targeted or bare, reaches dev-us without an approving
   # review; dev-eu and sbx still need one.
   dev-us:
     region: us-east-1
     identity: dev
-    gated: false
+    review: false
 
   # dev-eu fully applies first.
   sbx:
