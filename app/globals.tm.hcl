@@ -1,4 +1,4 @@
 globals {
-  version  = "21"
+  version  = "22"
   workload = "product"
 }
