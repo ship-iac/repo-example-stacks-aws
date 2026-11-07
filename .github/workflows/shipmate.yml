@@ -62,7 +62,7 @@ jobs:
       # Keep even without a repository secret: it passes the `<env>-plan` / `<env>-apply`
       # environment's envelope through. Delete it and nothing arrives.
       SHIPMATE_SECRETS: ${{ secrets.SHIPMATE_SECRETS }}
-    # Runner for engine jobs but the nine on ubuntu-slim (docs/aws.md §Runner choice);
+    # Runner for engine jobs but those on ubuntu-slim (docs/aws.md §Runner choice);
     # `*runner` reuses it, drift files set their own. ubuntu-latest for x64.
     with:
       runs_on: &runner ubuntu-26.04-arm
