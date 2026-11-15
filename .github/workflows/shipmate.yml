@@ -1,11 +1,11 @@
 name: shipmate
 run-name: >-
-  shipmate · ${{ github.event_name == 'pull_request_target'
+  ${{ github.event_name == 'workflow_dispatch'
+  && format('shipmate · {0} pr={1} ref={2} comment={3}', inputs.verb, inputs.pr_number, inputs.ref, inputs.comment_id)
+  || format('shipmate · {0}', github.event_name == 'pull_request_target'
   && github.event.action == 'closed' && 'release'
   || github.event_name == 'pull_request_target' && 'plan'
-  || github.event_name == 'issue_comment' && 'comment'
-  || github.event_name == 'push' && 'deploy'
-  || inputs.verb }}
+  || github.event_name == 'issue_comment' && 'comment' || 'deploy') }}
 on:
   pull_request_target:
     types: [opened, synchronize, reopened, ready_for_review, closed]
@@ -16,7 +16,8 @@ on:
   workflow_dispatch:
     inputs:
       # Only verb is required: one schema serves four verbs, and GitHub answers 422 to an
-      # empty required input. The engine refuses a plan with no number, an apply with no ref.
+      # empty required input. The engine refuses a plan with no number, an apply with no ref
+      # or no comment id.
       verb:
         description: What to run (plan, apply, unlock or auto)
         type: choice
@@ -32,6 +33,10 @@ on:
         default: ''
       pr_number:
         description: Pull request number (plan, apply and auto)
+        required: false
+        default: ''
+      comment_id:
+        description: Command comment id (plan, apply and unlock)
         required: false
         default: ''
 # Deny by default: each job grants its own permissions, so a job that loses its block gets none.
@@ -50,7 +55,7 @@ jobs:
       # A ready run and a dispatched plan wait for the run in flight; a push, open
       # or reopen run, or a re-run of one, cancels it.
       cancel-in-progress: ${{ github.event_name == 'pull_request_target' && github.event.action != 'ready_for_review' }}
-    uses: ship-iac/shipmate/.github/workflows/plan.yml@b20df00facd59fd1f00b82a83085a3e3caede472 # v0.55.1
+    uses: ship-iac/shipmate/.github/workflows/plan.yml@da8eb04df4676997b7665865a6ce6a49730b63fb # v0.56.0
     # Required: the callee is capped by these; fewer kills the run with no log.
     permissions:
       contents: read
@@ -73,7 +78,7 @@ jobs:
     concurrency:
       group: release-${{ github.event.pull_request.number }}
       cancel-in-progress: false
-    uses: ship-iac/shipmate/.github/workflows/release.yml@b20df00facd59fd1f00b82a83085a3e3caede472 # v0.55.1
+    uses: ship-iac/shipmate/.github/workflows/release.yml@da8eb04df4676997b7665865a6ce6a49730b63fb # v0.56.0
     permissions: {}
     secrets:
       SHIPMATE_APP_PRIVATE_KEY: ${{ secrets.SHIPMATE_APP_PRIVATE_KEY }}
@@ -83,7 +88,7 @@ jobs:
     name: comment
     # The engine drops comments on issues; this only selects the event.
     if: github.event_name == 'issue_comment'
-    uses: ship-iac/shipmate/.github/workflows/comment-ops.yml@b20df00facd59fd1f00b82a83085a3e3caede472 # v0.55.1
+    uses: ship-iac/shipmate/.github/workflows/comment-ops.yml@da8eb04df4676997b7665865a6ce6a49730b63fb # v0.56.0
     permissions:
       contents: read
       issues: write
@@ -100,14 +105,14 @@ jobs:
     concurrency:
       group: deploy-main
       cancel-in-progress: false
-    uses: ship-iac/shipmate/.github/workflows/deploy.yml@b20df00facd59fd1f00b82a83085a3e3caede472 # v0.55.1
+    uses: ship-iac/shipmate/.github/workflows/deploy.yml@da8eb04df4676997b7665865a6ce6a49730b63fb # v0.56.0
     permissions: { contents: read, checks: read, pull-requests: read, actions: read, id-token: write }
     secrets: *engine-secrets
     with:
       runs_on: *runner
   apply:
     if: github.event_name == 'workflow_dispatch' && inputs.verb == 'apply'
-    uses: ship-iac/shipmate/.github/workflows/apply.yml@b20df00facd59fd1f00b82a83085a3e3caede472 # v0.55.1
+    uses: ship-iac/shipmate/.github/workflows/apply.yml@da8eb04df4676997b7665865a6ce6a49730b63fb # v0.56.0
     permissions: { contents: read, checks: read, pull-requests: read, actions: read, id-token: write }
     secrets: *engine-secrets
     with:
@@ -119,7 +124,7 @@ jobs:
   # no comment selects it.
   auto:
     if: github.event_name == 'workflow_dispatch' && inputs.verb == 'auto'
-    uses: ship-iac/shipmate/.github/workflows/apply.yml@b20df00facd59fd1f00b82a83085a3e3caede472 # v0.55.1
+    uses: ship-iac/shipmate/.github/workflows/apply.yml@da8eb04df4676997b7665865a6ce6a49730b63fb # v0.56.0
     permissions: { contents: read, checks: read, pull-requests: read, actions: read, id-token: write }
     secrets: *engine-secrets
     with:
@@ -129,8 +134,8 @@ jobs:
       runs_on: *runner
   unlock:
     if: github.event_name == 'workflow_dispatch' && inputs.verb == 'unlock'
-    uses: ship-iac/shipmate/.github/workflows/unlock.yml@b20df00facd59fd1f00b82a83085a3e3caede472 # v0.55.1
-    permissions: { contents: read, checks: read, actions: read, id-token: write }
+    uses: ship-iac/shipmate/.github/workflows/unlock.yml@da8eb04df4676997b7665865a6ce6a49730b63fb # v0.56.0
+    permissions: { contents: read, checks: read, pull-requests: write, actions: read, id-token: write }
     secrets:
       SHIPMATE_SECRETS: ${{ secrets.SHIPMATE_SECRETS }}
     with:
