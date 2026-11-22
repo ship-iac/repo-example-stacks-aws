@@ -1,4 +1,4 @@
 globals {
   workload = "network"
-  version  = "18"
+  version  = "19"
 }
