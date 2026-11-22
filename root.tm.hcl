@@ -7,7 +7,7 @@ globals {
 # Two blocks, mutually exclusive conditions: Terramate 0.17.1 has no `tm_unset()`,
 # and bare `unset` emits `assume_role = unset`, surviving fmt and validate to die at init.
 generate_hcl "_backend.tf" {
-  condition = global.state_role_arn != ""
+  condition = global.state_role_arn != "" && !tm_try(global.local_backend, false)
   content {
     terraform {
       backend "s3" {
@@ -26,7 +26,7 @@ generate_hcl "_backend.tf" {
 }
 
 generate_hcl "_backend.tf" {
-  condition = global.state_role_arn == ""
+  condition = global.state_role_arn == "" && !tm_try(global.local_backend, false)
   content {
     terraform {
       backend "s3" {
@@ -93,6 +93,7 @@ generate_hcl "_variables.tf" {
 }
 
 generate_hcl "_main.tf" {
+  condition = !tm_try(global.local_backend, false)
   content {
     resource "random_pet" "this" {
       keepers = {
@@ -119,6 +120,29 @@ generate_hcl "_main.tf" {
     }
     output "parameter_name" {
       value = aws_ssm_parameter.this.name
+    }
+  }
+}
+
+generate_hcl "_backend.tf" {
+  condition = tm_try(global.local_backend, false)
+  content {
+    terraform {
+      backend "local" {}
+    }
+  }
+}
+
+generate_hcl "_main.tf" {
+  condition = tm_try(global.local_backend, false)
+  content {
+    resource "random_pet" "this" {
+      keepers = {
+        app_version = var.app_version
+      }
+    }
+    output "name" {
+      value = random_pet.this.id
     }
   }
 }
